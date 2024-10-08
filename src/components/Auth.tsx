@@ -10,8 +10,8 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 const Auth: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0); // 0 = Login, 1 = Register
   const navigate = useNavigate();
-  
-  // Create form validation schema
+
+  // Form validation schema
   const validationSchema = Yup.object({
     email: Yup.string().email('Invalid email format').required('Email is required'),
     password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
@@ -28,7 +28,6 @@ const Auth: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        // Depending on the tabIndex, perform login or registration
         if (tabIndex === 0) {
           // Logic for login
           const response = await axios.post(`${API_URL}/auth/login`, {
@@ -36,9 +35,9 @@ const Auth: React.FC = () => {
             password: values.password,
           });
 
-          // Assuming token is returned as `access_token`
           if (response.data.access_token) {
             localStorage.setItem('token', response.data.access_token); // Store token
+            localStorage.setItem('user', JSON.stringify(response.data.user)); // Store user info
             navigate('/'); // Redirect to home page after successful login
           }
         } else {

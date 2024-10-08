@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment } from '../services/taskService';
 import axios from 'axios'; // Import to fetch users
-import { CircularProgress, Box, Typography, TextField, Button } from '@mui/material';
+import { CircularProgress, Box, Typography, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 import TaskDetailOverview from './TaskDetailOverview';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 // Interfaces for User, Task, and Comment
 interface User {
@@ -25,8 +27,10 @@ interface Task {
 interface Comment {
   id: number;
   text: string;
-  author: string;
+  author: number;
   createdAt: string;
+  parentCommentId?: number;
+  replies?: Comment[];
 }
 
 interface TaskDetailProps {
@@ -39,7 +43,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [users, setUsers] = useState<User[]>([]); // State to hold users
+  const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+
+  // Get the current user from localStorage
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Fetch all users when component mounts
   useEffect(() => {
@@ -63,7 +71,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
           setTask(taskDetails);
           // Load comments for the task
           const taskComments = await fetchComments(parseInt(taskId));
-          setComments(taskComments);
+          const structuredComments = buildCommentHierarchy(taskComments);
+          setComments(structuredComments);
         }
       } catch (error) {
         toast.error('Failed to load task details.');
@@ -88,7 +97,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
     try {
       await deleteTask(capsuleId, taskId);
       toast.success('Task deleted successfully!');
-      // Redirect or remove task detail view as needed
     } catch (error) {
       toast.error('Failed to delete task.');
     }
@@ -97,14 +105,77 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
   const handleAddComment = async () => {
     if (newComment.trim() && taskId) {
       try {
-        const addedComment = await createComment(parseInt(taskId), newComment);
-        setComments([...comments, addedComment]);
+        await createComment(
+          parseInt(taskId),
+          newComment,
+          currentUser.id,
+          replyToCommentId || undefined
+        );
+        const updatedComments = await fetchComments(parseInt(taskId)); // Fetch updated comments
+        setComments(buildCommentHierarchy(updatedComments));
         setNewComment('');
+        setReplyToCommentId(null);
         toast.success('Comment added successfully!');
       } catch (error) {
         toast.error('Failed to add comment.');
       }
     }
+  };
+
+  // Map author ID to user name
+  const getAuthorName = (authorId: number) => {
+    const user = users.find((user) => user.id === authorId);
+    return user ? user.name : 'Unknown';
+  };
+
+  // Build a nested structure for comments
+  const buildCommentHierarchy = (comments: Comment[]) => {
+    const commentMap: { [key: number]: Comment } = {};
+    const rootComments: Comment[] = [];
+
+    comments.forEach((comment) => {
+      comment.replies = [];
+      commentMap[comment.id] = comment;
+
+      // If the comment has a parent, add it to its parent's replies
+      if (comment.parentCommentId) {
+        if (commentMap[comment.parentCommentId]) {
+          commentMap[comment.parentCommentId].replies!.push(comment);
+        }
+      } else {
+        // If no parent, it's a root comment
+        rootComments.push(comment);
+      }
+    });
+
+    return rootComments;
+  };
+
+  // Render comments recursively
+  const renderComments = (commentsList: Comment[]) => {
+    return commentsList.map((comment) => (
+      <Box
+        key={comment.id}
+        mt={2}
+        p={1}
+        border="1px solid #ccc"
+        style={{ marginLeft: comment.parentCommentId ? '20px' : '0px' }}
+      >
+        <Typography variant="body2">
+          <strong>{getAuthorName(Number(comment.author))}</strong> at{' '}
+          {new Date(comment.createdAt).toLocaleString()}
+        </Typography>
+        <Typography variant="body1" dangerouslySetInnerHTML={{ __html: comment.text }} />
+        {/* Button to reply */}
+        <Button size="small" onClick={() => setReplyToCommentId(comment.id)}>
+          Reply
+        </Button>
+        {/* Render replies if available */}
+        {comment.replies && comment.replies.length > 0 && (
+          <Box ml={2}>{renderComments(comment.replies)}</Box>
+        )}
+      </Box>
+    ));
   };
 
   if (loading) {
@@ -127,30 +198,34 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
           <Box mt={4}>
             <Typography variant="h6">Comments</Typography>
             {comments.length > 0 ? (
-              comments.map((comment) => (
-                <Box key={comment.id} mt={2} p={1} border="1px solid #ccc">
-                  <Typography variant="body2">
-                    <strong>{comment.author}</strong> at {new Date(comment.createdAt).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body1">{comment.text}</Typography>
-                </Box>
-              ))
+              renderComments(comments)
             ) : (
               <Typography variant="body2">No comments yet.</Typography>
             )}
 
             {/* Add New Comment */}
-            <TextField
-              label="Add a Comment"
+            <ReactQuill
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              fullWidth
-              multiline
-              rows={2}
-              margin="normal"
+              onChange={setNewComment}
+              theme="snow"
+              placeholder="Add a comment..."
+              modules={{
+                toolbar: [
+                  [{ 'header': '1'}, {'header': '2'}, { 'font': [] }],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  ['link', 'image'],
+                  ['clean']
+                ],
+              }}
+              formats={[
+                'header', 'font', 'list', 'bullet', 
+                'bold', 'italic', 'underline', 'strike',
+                'link', 'image'
+              ]}
             />
             <Button variant="contained" onClick={handleAddComment} disabled={!newComment.trim()}>
-              Post Comment
+              {replyToCommentId ? 'Post Reply' : 'Post Comment'}
             </Button>
           </Box>
         </>
