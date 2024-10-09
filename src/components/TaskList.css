@@ -1,0 +1,71 @@
+/* Container for task list */
+.task-list-container {
+    width: 100%;
+    overflow-x: auto; /* Enable horizontal scrolling for small screens */
+    margin-top: 20px;
+  }
+  
+  /* Table styles */
+  .task-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+  }
+  
+  .task-list-table th, .task-list-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: pointer;
+  }
+  
+  .task-list-table th {
+    background-color: #f7fafc;
+    font-weight: bold;
+  }
+  
+  .task-list-table td {
+    vertical-align: middle;
+  }
+  
+  .task-link {
+    text-decoration: none;
+    color: #3182ce;
+  }
+  
+  .task-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Avatars for assigned users */
+  .assigned-avatar {
+    background-color: #2d3748;
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 5px;
+    font-size: 0.9em;
+  }
+  
+  /* Action buttons */
+  button {
+    background-color: #f7fafc;
+    border: 1px solid #cbd5e0;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #e2e8f0;
+  }
+  
+  button:focus {
+    outline: none;
+  }
+  

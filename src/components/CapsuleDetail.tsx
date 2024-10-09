@@ -5,38 +5,17 @@ import { fetchTasksByCapsule, createTask, updateTask, deleteTask } from '../serv
 import axios from 'axios';
 import { Button, CircularProgress, Box } from '@mui/material';
 import { toast } from 'react-toastify';
-import KanbanBoard from './KanbanBoard';
-import TaskModal from './TaskModal'; // Import TaskModal
-
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  dueDate: string;
-  assignedUsers: User[];
-}
-
-interface CapsuleDetailProps {
-  id: number;
-  title: string;
-  description: string;
-}
-
-interface User {
-  id: number;
-  name: string;
-}
+import TaskModal from './TaskModal';
+import TaskList from './TaskList';
+import { Task, User } from './types';  // Import Task and User types
 
 const CapsuleDetail: React.FC = () => {
   const { id: capsuleId } = useParams<{ id: string }>();
-  const [capsule, setCapsule] = useState<CapsuleDetailProps | null>(null);
+  const [capsule, setCapsule] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
 
-  // State for Task Modal
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [taskForEditing, setTaskForEditing] = useState<Task | null>(null);
 
@@ -59,10 +38,11 @@ const CapsuleDetail: React.FC = () => {
         if (capsuleId) {
           const capsuleDetails = await fetchCapsuleDetails(parseInt(capsuleId));
           const tasksList = await fetchTasksByCapsule(parseInt(capsuleId));
-          // Convert assignedUsers to assignedUserIds for the frontend
+
           const formattedTasks = tasksList.map((task: Task) => ({
             ...task,
-            assignedUserIds: task.assignedUsers.map((user) => user.id),
+            taskName: task.title,
+            assignedUserIds: task.assignedUsers,
           }));
           setCapsule(capsuleDetails);
           setTasks(formattedTasks);
@@ -77,25 +57,30 @@ const CapsuleDetail: React.FC = () => {
   }, [capsuleId]);
 
   const handleOpenTaskModal = (task?: Task) => {
-    setTaskForEditing(task || null);
+    const taskDataForModal = task
+      ? { ...task, assignedUserIds: task.assignedUsers.map((user: { id: any; }) => user.id) }  // Convert assignedUsers to assignedUserIds
+      : null;
+    setTaskForEditing(taskDataForModal);
     setTaskModalOpen(true);
   };
 
   const handleSaveTask = async (taskData: any) => {
     try {
       if (taskForEditing) {
-        // Update task
         await updateTask(parseInt(capsuleId!), taskForEditing.id, taskData);
         toast.success('Task updated successfully!');
       } else {
-        // Create new task
         await createTask(parseInt(capsuleId!), taskData);
         toast.success('Task created successfully!');
       }
 
-      // Reload tasks
       const updatedTasks = await fetchTasksByCapsule(parseInt(capsuleId!));
-      setTasks(updatedTasks);
+      const formattedTasks = updatedTasks.map((task: Task) => ({
+        ...task,
+        taskName: task.title,
+        assignedUserIds: task.assignedUsers,
+      }));
+      setTasks(formattedTasks);
     } catch (err) {
       toast.error('Failed to save task.');
     } finally {
@@ -108,7 +93,12 @@ const CapsuleDetail: React.FC = () => {
       try {
         await deleteTask(parseInt(capsuleId!), taskId);
         const updatedTasks = await fetchTasksByCapsule(parseInt(capsuleId!));
-        setTasks(updatedTasks);
+        const formattedTasks = updatedTasks.map((task: Task) => ({
+          ...task,
+          taskName: task.title,
+          assignedUserIds: task.assignedUsers,
+        }));
+        setTasks(formattedTasks);
         toast.success('Task deleted successfully!');
       } catch (err) {
         toast.error('Failed to delete task.');
@@ -132,18 +122,12 @@ const CapsuleDetail: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Kanban Board View */}
-      <KanbanBoard
+      {/* Task List View */}
+      <TaskList
         tasks={tasks}
-        onTaskUpdate={(taskId, status) => {
-          const updatedTask = tasks.find(task => task.id === taskId);
-          if (updatedTask) {
-            updateTask(parseInt(capsuleId!), taskId, { ...updatedTask, status });
-            fetchTasksByCapsule(parseInt(capsuleId!)).then(setTasks);
-          }
-        }}
-        onTaskEdit={handleOpenTaskModal} // Open modal with the task for editing
-        onTaskDelete={handleDeleteTask}
+        onDelete={handleDeleteTask}
+        onEdit={handleOpenTaskModal}  // Pass the full task with user IDs
+        users={users}  // Passing users to show avatars/icons in the list
       />
 
       {/* Task Modal */}
@@ -152,7 +136,7 @@ const CapsuleDetail: React.FC = () => {
         onClose={() => setTaskModalOpen(false)}
         onSave={handleSaveTask}
         users={users}
-        initialTaskData={taskForEditing}
+        initialTaskData={taskForEditing}  // Pass task data with user IDs to the modal
       />
     </div>
   );

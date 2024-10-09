@@ -1,0 +1,23 @@
+/* Top Bar */
+.top-bar {
+    background-color: #f7fafc;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 20px;
+    border-bottom: 1px solid #e2e8f0;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .notifications {
+    cursor: pointer;
+  }
+  
+  .icon {
+    font-size: 1.5em;
+  }
+  

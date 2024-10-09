@@ -111,7 +111,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
             multiple
             value={assignedUserIds}
             onChange={(e) => setAssignedUserIds(e.target.value as number[])}
-            renderValue={(selected) => selected.map((id) => users.find((user) => user.id === id)?.name).join(', ')}
+            renderValue={(selected) =>
+              selected
+                .map((id) => users.find((user) => user.id === id)?.name)
+                .join(', ')
+            }
           >
             {users.map((user) => (
               <MenuItem key={user.id} value={user.id}>

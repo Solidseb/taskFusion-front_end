@@ -107,18 +107,6 @@ const Dashboard: React.FC = () => {
         Create New Capsule
       </Button>
 
-      <Button
-        variant="contained"
-        color="secondary"
-        style={{ marginLeft: '20px' }}
-        onClick={() => {
-          localStorage.removeItem('token');
-          window.location.href = '/auth';
-        }}
-      >
-        Logout
-      </Button>
-
       {/* Search Bar */}
       <TextField
         label="Search Capsules"
