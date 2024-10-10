@@ -1,0 +1,38 @@
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+// Fetch the authenticated user's basic info (name, email)
+export const fetchUserInfo = async () => {
+  const token = localStorage.getItem('token');
+  try {
+    const response = await axios.get(`${API_URL}/users/info`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch user info:', error);
+    return null;
+  }
+};
+
+// Update user info (name, email, password)
+export const updateUserInfo = async (token: string, userData: any) => {
+  try {
+    const response = await axios.put(
+      `${API_URL}/users/info`,
+      { ...userData },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Failed to update user info:', error);
+    return null;
+  }
+};

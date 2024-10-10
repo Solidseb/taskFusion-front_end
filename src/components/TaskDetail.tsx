@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment } from '../services/taskService';
-import axios from 'axios'; // Import to fetch users
 import { CircularProgress, Box, Typography, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 import TaskDetailOverview from './TaskDetailOverview';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { fetchUserInfo } from '../services/userService';  // Import service functions
 
 // Interfaces for User, Task, and Comment
 interface User {
@@ -51,16 +51,18 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
 
   // Fetch all users when component mounts
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchUser = async () => {
+     
       try {
-        const response = await axios.get('http://localhost:3000/users'); // Replace with the correct API endpoint
-        setUsers(response.data);
-      } catch (error) {
-        toast.error('Failed to load users.');
+        const response = await fetchUserInfo();
+        setUsers(response);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
       }
     };
-    fetchUsers();
+    fetchUser();
   }, []);
+
 
   useEffect(() => {
     const loadTask = async () => {

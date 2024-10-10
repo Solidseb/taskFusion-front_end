@@ -4,7 +4,12 @@ const API_URL = 'http://localhost:3000/tasks';
 
 // Fetch all users
 export const fetchUsers = async () => {
-  const response = await axios.get(`${API_URL}/users`);
+  const token = localStorage.getItem('token');
+  const response = await axios.get(`${API_URL}/users`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 

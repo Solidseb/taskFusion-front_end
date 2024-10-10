@@ -69,3 +69,30 @@
     outline: none;
   }
   
+  .task-link {
+    text-decoration: none;
+    color: #007bff;
+  }
+  
+  .task-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Table Styling */
+  .MuiTableCell-root {
+    padding: 12px 16px;
+  }
+  
+  .MuiTableCell-root:first-child {
+    padding-left: 24px;
+  }
+  
+  .MuiTableCell-root:last-child {
+    padding-right: 24px;
+  }
+  
+  .MuiTableHead-root .MuiTableCell-root {
+    font-weight: bold;
+    background-color: #f5f5f5;
+  }
+  

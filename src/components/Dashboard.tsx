@@ -1,30 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
-  Button, List, ListItem, ListItemText, IconButton,
-  Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography
+  Button, TextField, Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import CapsuleCard from './CapsuleCard';  // CapsuleCard component for displaying capsules
+import CapsuleFormDialog from './CapsuleFormDialog';  // Form Dialog for creating/editing capsules
+import { useNavigate } from 'react-router-dom';  // For navigation
+import './Dashboard.css';  // Dashboard-specific styles for the grid layout
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+
+interface User {
+  id: number;
+  name: string;
+}
 
 interface Capsule {
   id: number;
   title: string;
   description: string;
+  dueDate: string;
+  newDueDate?: string;  // New due date field for tracking modifications
+  status: string;
+  completedTasks: number;
+  totalTasks: number;
+  assignedUsers: User[];
 }
 
 const Dashboard: React.FC = () => {
   const [capsules, setCapsules] = useState<Capsule[]>([]);
   const [open, setOpen] = useState(false);
-  const [newCapsule, setNewCapsule] = useState({ title: '', description: '' });
   const [editCapsule, setEditCapsule] = useState<Capsule | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Fetch capsules from the backend
   const fetchCapsules = async () => {
@@ -51,26 +62,24 @@ const Dashboard: React.FC = () => {
 
   const handleClose = () => {
     setOpen(false);
-    setNewCapsule({ title: '', description: '' });
-    setEditCapsule(null);
+    setEditCapsule(null);  // Reset the editing state when closing
   };
 
   const handleOpenEdit = (capsule: Capsule) => {
-    setEditCapsule(capsule);
-    setNewCapsule({ title: capsule.title, description: capsule.description });
+    setEditCapsule(capsule); // Set the capsule to be edited
     handleOpen();
   };
 
   // Handle creating or updating a capsule
-  const handleCreateOrUpdateCapsule = async () => {
+  const handleCreateOrUpdateCapsule = async (data: { title: string; description: string; dueDate?: string; newDueDate?: string }) => {
     try {
       if (editCapsule) {
         // Update capsule
-        await axios.put(`${API_URL}/capsules/${editCapsule.id}`, newCapsule);
+        await axios.put(`${API_URL}/capsules/${editCapsule.id}`, data);
         toast.success('Capsule updated successfully!');
       } else {
         // Create new capsule
-        await axios.post(`${API_URL}/capsules`, newCapsule);
+        await axios.post(`${API_URL}/capsules`, data);
         toast.success('Capsule created successfully!');
       }
       fetchCapsules(); // Refresh capsules after creation or update
@@ -103,6 +112,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
+      {/* Create New Capsule Button */}
       <Button variant="contained" color="primary" onClick={handleOpen} startIcon={<AddIcon />}>
         Create New Capsule
       </Button>
@@ -121,53 +131,32 @@ const Dashboard: React.FC = () => {
       {loading ? (
         <Typography variant="body1">Loading capsules...</Typography>
       ) : (
-        <List>
+        <div className="capsule-grid">
           {filteredCapsules.map((capsule) => (
-            <ListItem key={capsule.id} component={Link} to={`/capsules/${capsule.id}`}>
-              <ListItemText primary={capsule.title} secondary={capsule.description} />
-              <IconButton edge="end" color="primary" onClick={(e) => { e.preventDefault(); handleOpenEdit(capsule); }}>
-                <EditIcon />
-              </IconButton>
-              <IconButton edge="end" color="secondary" onClick={(e) => { e.preventDefault(); handleDeleteCapsule(capsule.id); }}>
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
+            <CapsuleCard
+              key={capsule.id}
+              title={capsule.title}
+              status={capsule.status}
+              dueDate={capsule.dueDate}
+              newDueDate={capsule.newDueDate}  // Display newDueDate if available
+              completedTasks={capsule.completedTasks}
+              totalTasks={capsule.totalTasks}
+              assignedUsers={capsule.assignedUsers}
+              onEdit={() => handleOpenEdit(capsule)}
+              onDelete={() => handleDeleteCapsule(capsule.id)}
+              onViewDetails={() => navigate(`/capsules/${capsule.id}`)} // Navigate to capsule details
+            />
           ))}
-        </List>
+        </div>
       )}
 
       {/* Dialog for Creating or Editing a Capsule */}
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editCapsule ? 'Edit Capsule' : 'Create New Capsule'}</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="Title"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newCapsule.title}
-            onChange={(e) => setNewCapsule({ ...newCapsule, title: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Description"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newCapsule.description}
-            onChange={(e) => setNewCapsule({ ...newCapsule, description: e.target.value })}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleCreateOrUpdateCapsule} color="primary">
-            {editCapsule ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <CapsuleFormDialog
+        open={open}
+        onClose={handleClose}
+        onSave={handleCreateOrUpdateCapsule}
+        capsule={editCapsule}  // Pass the capsule for editing (null if creating)
+      />
     </div>
   );
 };

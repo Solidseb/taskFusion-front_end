@@ -1,6 +1,9 @@
-// components/Sidebar.tsx
 import React from 'react';
-import './Sidebar.css'; // Import the specific styles for the sidebar if necessary
+import { Link } from 'react-router-dom';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
+import './Sidebar.css';
 
 interface SidebarProps {
   isSidebarCollapsed: boolean;
@@ -17,9 +20,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarCollapsed, toggleSidebar }) 
         </button>
       </div>
       <ul className="sidebar-menu">
-        <li><a href="/">🏠 {isSidebarCollapsed ? '' : 'Dashboard'}</a></li>
-        <li><a href="/profile">👤 {isSidebarCollapsed ? '' : 'Profile'}</a></li>
-        {/* Add more links as needed */}
+        <li className={window.location.pathname === '/' ? 'active' : ''}>
+          <Link to="/">
+            <DashboardIcon /> {isSidebarCollapsed ? '' : 'Dashboard'}
+          </Link>
+        </li>
+        <li className={window.location.pathname === '/profile' ? 'active' : ''}>
+          <Link to="/profile">
+            <PersonIcon /> {isSidebarCollapsed ? '' : 'Profile'}
+          </Link>
+        </li>
+        <li className={window.location.pathname === '/settings' ? 'active' : ''}>
+          <Link to="/settings">
+            <SettingsIcon /> {isSidebarCollapsed ? '' : 'Settings'}
+          </Link>
+        </li>
       </ul>
     </nav>
   );

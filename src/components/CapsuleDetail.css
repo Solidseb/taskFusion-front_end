@@ -1,0 +1,37 @@
+.capsule-detail-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .progress-section {
+    margin-top: 20px;
+  }
+  
+  .task-list {
+    margin-top: 30px;
+  }
+  
+  .task-item {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
+    border-radius: 5px;
+  }
+  
+  .task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .task-meta {
+    margin-top: 10px;
+  }
+  
+  .assigned-users {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+  }
+  
