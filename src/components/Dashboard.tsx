@@ -9,13 +9,9 @@ import CapsuleCard from './CapsuleCard';  // CapsuleCard component for displayin
 import CapsuleFormDialog from './CapsuleFormDialog';  // Form Dialog for creating/editing capsules
 import { useNavigate } from 'react-router-dom';  // For navigation
 import './Dashboard.css';  // Dashboard-specific styles for the grid layout
+import { User } from "./types";
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-
-interface User {
-  id: number;
-  name: string;
-}
 
 interface Capsule {
   id: number;

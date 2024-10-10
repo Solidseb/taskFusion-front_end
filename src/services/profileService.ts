@@ -32,7 +32,7 @@ export const fetchUserInfo = async (token: string) => {
   }
 };
 
-export const updateUserProfile = async (token: string, profile: { bio: string; name: string; email: string }, skills: any[], password?: string) => {
+export const updateUserProfile = async (token: string, profile: { bio: string; name: string; email: string; avatar:string }, skills: any[], password?: string) => {
     return axios.put(
       `${API_URL}/users/profile`,
       { profile, skills, password },  // Ensure this structure matches the back-end expectations
@@ -42,4 +42,16 @@ export const updateUserProfile = async (token: string, profile: { bio: string; n
         },
       }
     );
+};
+
+export const uploadUserAvatar = async (token: string, avatarFile: File) => {
+const formData = new FormData();
+formData.append('avatar', avatarFile);
+
+return axios.post(`${API_URL}/users/profile/avatar`, formData, {
+    headers: {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'multipart/form-data',
+    },
+});
 };

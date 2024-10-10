@@ -157,7 +157,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks = [], users, onDelete, onEdit
                     {task.assignedUsers && task.assignedUsers.length > 0 ? (
                       task.assignedUsers.map((user) => (
                         <Tooltip title={user.name} key={user.id}>
-                          <Avatar style={{ marginRight: 5 }}>{user.name[0].toUpperCase()}</Avatar>
+                          <Avatar src={ user.avatar } style={{ marginRight: 5 }}>{user.name[0].toUpperCase()}</Avatar>
                         </Tooltip>
                       ))
                     ) : (

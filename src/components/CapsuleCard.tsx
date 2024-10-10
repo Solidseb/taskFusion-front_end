@@ -3,11 +3,7 @@ import { Card, CardContent, Typography, IconButton, CircularProgress, Avatar, Bo
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format, isValid } from 'date-fns';
-
-interface User {
-  id: number;
-  name: string;
-}
+import { User } from "./types";
 
 interface CapsuleCardProps {
   title: string;
@@ -85,7 +81,7 @@ const CapsuleCard: React.FC<CapsuleCardProps> = ({
         {/* Assigned Users */}
         <Box display="flex" alignItems="center" marginTop={2}>
           {assignedUsers.map((user) => (
-            <Avatar key={user.id} style={{ marginRight: 5 }}>
+            <Avatar src={ user.avatar } key={user.id} style={{ marginRight: 5 }}>
               {user.name[0].toUpperCase()}
             </Avatar>
           ))}

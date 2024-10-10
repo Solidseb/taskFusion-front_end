@@ -5,7 +5,7 @@ import { Box, Typography, CircularProgress } from "@mui/material";
 import TaskManager from "./TaskManager";
 import { User } from "./types";
 import { toast } from "react-toastify";
-import { fetchUserInfo } from '../services/userService';  // Import service functions
+import { fetchUsers } from "../services/userService";
 
 const CapsuleDetail: React.FC = () => {
   const { id: capsuleId } = useParams<{ id: string }>();
@@ -17,7 +17,7 @@ const CapsuleDetail: React.FC = () => {
     const fetchUser = async () => {
      
       try {
-        const response = await fetchUserInfo();
+        const response = await fetchUsers();
         setUsers(response);
       } catch (err) {
         console.error("Failed to fetch users:", err);

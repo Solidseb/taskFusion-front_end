@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment } from '../services/taskService';
+import { fetchUsers } from '../services/userService'
 import { CircularProgress, Box, Typography, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 import TaskDetailOverview from './TaskDetailOverview';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { fetchUserInfo } from '../services/userService';  // Import service functions
 
 // Interfaces for User, Task, and Comment
 interface User {
@@ -54,7 +54,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
     const fetchUser = async () => {
      
       try {
-        const response = await fetchUserInfo();
+        const response = await fetchUsers();
         setUsers(response);
       } catch (err) {
         console.error("Failed to fetch users:", err);

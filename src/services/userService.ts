@@ -36,3 +36,18 @@ export const updateUserInfo = async (token: string, userData: any) => {
     return null;
   }
 };
+
+export const fetchUsers = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.get(`${API_URL}/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data; // Make sure this is an array of users
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+      throw err; // Throw error to handle it on the frontend
+    }
+  };

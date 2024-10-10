@@ -8,7 +8,7 @@ interface TaskModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (taskData: any) => void;
-  users: { id: number, name: string }[];
+  users: { id: number, name: string }[]; // Make sure the id is correctly typed as number or string
   initialTaskData?: any; // Data for editing an existing task
 }
 
@@ -19,7 +19,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('To Do');
   const [priority, setPriority] = useState('Medium');
-  const [assignedUserIds, setAssignedUserIds] = useState<number[]>([]);
+  const [assignedUserIds, setAssignedUserIds] = useState<number[]>([]); // Use string[] if user ids are strings
 
   useEffect(() => {
     if (initialTaskData) {
@@ -109,19 +109,23 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
           <InputLabel>Assign Users</InputLabel>
           <Select
             multiple
-            value={assignedUserIds}
-            onChange={(e) => setAssignedUserIds(e.target.value as number[])}
-            renderValue={(selected) =>
-              selected
-                .map((id) => users.find((user) => user.id === id)?.name)
-                .join(', ')
-            }
+            value={assignedUserIds} // Ensure assignedUserIds is an array
+            onChange={(e) => setAssignedUserIds(e.target.value as number[])} // Use string[] if user ids are strings
+            renderValue={(selected) => (
+              (selected.length > 0
+                ? selected.map((id) => users.find((user) => user.id === id)?.name).join(', ')
+                : 'Unassigned') // Handle empty selected case
+            )}
           >
-            {users.map((user) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.name}
-              </MenuItem>
-            ))}
+            {users.length > 0 ? (
+              users.map((user) => (
+                <MenuItem key={user.id} value={user.id}>
+                  {user.name}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>No Users Available</MenuItem> // Handle empty users case
+            )}
           </Select>
         </FormControl>
         <Box mt={2}>
