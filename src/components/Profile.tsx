@@ -3,6 +3,7 @@ import { Container, TextField, Button, Typography, Box, IconButton, MenuItem, Av
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'react-toastify';
 import { fetchUserProfile, fetchUserInfo, updateUserProfile } from '../services/profileService';
+import { compressImageFile } from '../utils/imageCompression';
 
 const competencyLevels = [
   { value: 'Beginner', label: 'Beginner' },
@@ -19,7 +20,7 @@ const Profile: React.FC = () => {
     bio: '',
     skills: [],
   });
-  const [avatarBase64, setAvatarBase64] = useState<string | null>(null); // Store the base64 version of the avatar
+  const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
 
   // Fetch user info and profile data
   useEffect(() => {
@@ -29,6 +30,7 @@ const Profile: React.FC = () => {
         const userInfo = await fetchUserInfo(token as string);
         const profileInfo = await fetchUserProfile(token as string);
 
+        // Ensure proper initialization
         setUser({
           name: userInfo?.name || '',
           email: userInfo?.email || '',
@@ -48,17 +50,23 @@ const Profile: React.FC = () => {
     fetchProfileAndUserInfo();
   }, []);
 
-  // Handle avatar change and display it in real-time
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Avatar change and compression
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      const reader = new FileReader();
+      
+      try {
+        const compressedFile = await compressImageFile(file, 0.7); // Compress image file
+        const reader = new FileReader();
 
-      reader.onloadend = () => {
-        setAvatarBase64(reader.result as string); // Update the base64 image to be shown immediately
-      };
+        reader.onloadend = () => {
+          setAvatarBase64(reader.result as string);  // Set base64-encoded avatar image
+        };
 
-      reader.readAsDataURL(file); // Convert the image to base64 format
+        reader.readAsDataURL(compressedFile);  // Convert the compressed image to base64
+      } catch (error) {
+        toast.error('Failed to compress image');
+      }
     }
   };
 
@@ -83,7 +91,7 @@ const Profile: React.FC = () => {
     try {
       await updateUserProfile(
         token as string,
-        { bio: profile.bio, name: user.name, email: user.email, avatar: avatarBase64 || user.avatar }, // Send base64 or previous avatar
+        { bio: profile.bio, name: user.name, email: user.email, avatar: avatarBase64 || user.avatar },  // Send avatar as base64
         profile.skills,
         password || undefined,
       );
@@ -107,7 +115,7 @@ const Profile: React.FC = () => {
       {/* Avatar Section */}
       <Box display="flex" alignItems="center" mb={2}>
         <Avatar
-          src={avatarBase64 || user.avatar || `${process.env.REACT_APP_API_URL}${user.avatar}`}  // Show the updated base64 or the previous avatar
+          src={avatarBase64 || user.avatar}  // Show base64 or the avatar from API
           alt={user.name}
           sx={{ width: 80, height: 80, marginRight: '10px' }}
         />
@@ -153,7 +161,7 @@ const Profile: React.FC = () => {
       <Typography variant="h5" style={{ marginTop: '20px' }}>Bio</Typography>
       <TextField
         label="Bio"
-        value={profile?.bio || ''}
+        value={profile?.bio || ''}  // Fallback for null/empty bio
         onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
         margin="normal"
         fullWidth

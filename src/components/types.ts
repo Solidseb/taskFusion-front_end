@@ -14,3 +14,11 @@ export interface User {
     priority: string;
   }
   
+ export  interface Comment {
+    id: number;
+    text: string;
+    author: number;
+    createdAt: string;
+    parentCommentId?: number;
+    replies?: Comment[];
+  }
