@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment } from '../services/taskService';
 import { fetchUsers } from '../services/userService';
-import { CircularProgress, Box, Typography, Button } from '@mui/material';
+import { CircularProgress, Box, Typography, Button, Divider, Card } from '@mui/material';
 import { toast } from 'react-toastify';
 import TaskDetailOverview from './TaskDetailOverview';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { User, Task, Comment } from './types';
+import dayjs from 'dayjs';
 
 interface TaskDetailProps {
   capsuleId: number;
@@ -22,10 +23,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
   const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
   const [users, setUsers] = useState<User[]>([]);
 
-  // Get the current user from localStorage
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // Fetch all users when component mounts
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -46,7 +45,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
           const taskDetails = await fetchTaskDetails(parseInt(taskId));
           setTask(taskDetails);
 
-          // Load comments for the task
           const taskComments = await fetchComments(parseInt(taskId));
           const structuredComments = buildCommentHierarchy(taskComments);
           setComments(structuredComments);
@@ -83,7 +81,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
     if (newComment.trim() && taskId) {
       try {
         await createComment(parseInt(taskId), newComment, currentUser.id, replyToCommentId || undefined);
-        const updatedComments = await fetchComments(parseInt(taskId)); // Fetch updated comments
+        const updatedComments = await fetchComments(parseInt(taskId)); 
         setComments(buildCommentHierarchy(updatedComments));
         setNewComment('');
         setReplyToCommentId(null);
@@ -94,13 +92,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
     }
   };
 
-  // Map author ID to user name
   const getAuthorName = (authorId: number) => {
     const user = users.find((user) => user.id === authorId);
     return user ? user.name : 'Unknown';
   };
 
-  // Build a nested structure for comments
   const buildCommentHierarchy = (comments: Comment[]) => {
     const commentMap: { [key: number]: Comment } = {};
     const rootComments: Comment[] = [];
@@ -121,7 +117,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
     return rootComments;
   };
 
-  // Render comments recursively
   const renderComments = (commentsList: Comment[]) => {
     return commentsList.map((comment) => (
       <Box
@@ -129,13 +124,13 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
         mt={2}
         p={1}
         border="1px solid #ccc"
+        borderRadius={1}
         style={{ marginLeft: comment.parentCommentId ? '20px' : '0px' }}
       >
         <Typography variant="body2">
-          <strong>{getAuthorName(Number(comment.author))}</strong> at {new Date(comment.createdAt).toLocaleString()}
+          <strong>{getAuthorName(comment.author)}</strong> at {new Date(comment.createdAt).toLocaleString()}
         </Typography>
         <Typography variant="body1" dangerouslySetInnerHTML={{ __html: comment.text }} />
-        {/* Button to reply */}
         <Button size="small" onClick={() => setReplyToCommentId(comment.id)}>
           Reply
         </Button>
@@ -154,20 +149,29 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
     <Box sx={{ padding: 3 }}>
       {task ? (
         <>
-          {/* Task Header */}
-          <TaskDetailOverview
-            task={task}
-            users={users}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-          />
+          {/* Task Header wrapped in Card */}
+          <Card sx={{ padding: 3, marginBottom: 3 }}>
+            <TaskDetailOverview
+              task={task}
+              users={users}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+            />
+          </Card>
+
+          {/* Show completed date if task is completed */}
+          {task.completedDate && (
+            <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+              Completed on: {dayjs(task.completedDate).format('MMMM D, YYYY')}
+            </Typography>
+          )}
 
           {/* Comments Section */}
-          <Box mt={4}>
+          <Divider sx={{ my: 4 }} />
+          <Box mt={2}>
             <Typography variant="h6">Comments</Typography>
             {comments.length > 0 ? renderComments(comments) : <Typography variant="body2">No comments yet.</Typography>}
 
-            {/* Add New Comment */}
             <ReactQuill
               value={newComment}
               onChange={setNewComment}
@@ -184,7 +188,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ capsuleId }) => {
               }}
               formats={['header', 'font', 'list', 'bullet', 'bold', 'italic', 'underline', 'strike', 'link', 'image']}
             />
-            <Button variant="contained" onClick={handleAddComment} disabled={!newComment.trim()}>
+            <Button variant="contained" onClick={handleAddComment} disabled={!newComment.trim()} sx={{ mt: 2 }}>
               {replyToCommentId ? 'Post Reply' : 'Post Comment'}
             </Button>
           </Box>

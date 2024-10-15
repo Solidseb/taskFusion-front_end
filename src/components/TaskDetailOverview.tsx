@@ -8,13 +8,14 @@ import {
   MenuItem,
   Avatar,
   IconButton,
-  Stack,
   TextField,
+  Stack
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import dayjs from 'dayjs';
 
 // User interface
 interface User {
@@ -31,6 +32,7 @@ interface TaskDetailProps {
     description: string;
     status: string;
     priority: string;
+    startDate: string;
     dueDate: string;
     assignedUsers: User[];
   };
@@ -111,76 +113,105 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({ task, users, onUpdateTa
   return (
     <Box sx={{ padding: 3 }}>
       {/* Task Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        {isEditing ? (
-          <TextField
-            value={updatedTask.title}
-            onChange={(e) => setUpdatedTask({ ...updatedTask, title: e.target.value })}
-            fullWidth
-            variant="outlined"
-            label="Task Title"
-            sx={{ marginRight: 2 }}
-          />
-        ) : (
-          <Typography variant="h4">{task.title}</Typography>
-        )}
+      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+        {/* Title and Description */}
+        <Box flex={1}>
+          {isEditing ? (
+            <TextField
+              value={updatedTask.title}
+              onChange={(e) => setUpdatedTask({ ...updatedTask, title: e.target.value })}
+              fullWidth
+              variant="outlined"
+              label="Task Title"
+              sx={{ marginBottom: 2 }}
+            />
+          ) : (
+            <Typography variant="h4">{task.title}</Typography>
+          )}
 
-        {/* Status, Priority, and Assigned Users */}
-        <Box display="flex" gap={1} alignItems="center">
-          {/* Status */}
-          <Chip
-            label={task.status}
-            color={task.status === 'Completed' ? 'success' : task.status === 'In Progress' ? 'primary' : 'default'}
-            onClick={handleStatusClick}
-          />
-          <Menu anchorEl={statusAnchorEl} open={Boolean(statusAnchorEl)} onClose={() => handleStatusClose()}>
-            {statusOptions.map((status) => (
-              <MenuItem key={status} onClick={() => handleStatusClose(status)}>
-                {status}
-              </MenuItem>
-            ))}
-          </Menu>
+          <Box mb={3}>
+            <Typography variant="h6">Description</Typography>
+            {isEditing ? (
+              <ReactQuill
+                value={updatedTask.description}
+                onChange={(value) => setUpdatedTask({ ...updatedTask, description: value })}
+                theme="snow"
+                placeholder="Enter task description..."
+                modules={{
+                  toolbar: [
+                    [{ header: '1' }, { header: '2' }, { font: [] }],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    ['link', 'image'],
+                    ['clean'],
+                  ],
+                }}
+                formats={['header', 'font', 'list', 'bullet', 'bold', 'italic', 'underline', 'strike', 'link', 'image']}
+              />
+            ) : (
+              <Typography variant="body1" color="textSecondary" sx={{ marginTop: 1, marginBottom: 3 }}>
+                <div dangerouslySetInnerHTML={{ __html: task.description }} />
+              </Typography>
+            )}
+          </Box>
+        </Box>
 
-          {/* Priority */}
-          <Chip
-            label={task.priority}
-            color={
-              task.priority === 'High' ? 'error' : task.priority === 'Medium' ? 'warning' : 'success'
-            }
-            onClick={handlePriorityClick}
-          />
-          <Menu anchorEl={priorityAnchorEl} open={Boolean(priorityAnchorEl)} onClose={() => handlePriorityClose()}>
-            {priorityOptions.map((priority) => (
-              <MenuItem key={priority} onClick={() => handlePriorityClose(priority)}>
-                {priority}
-              </MenuItem>
-            ))}
-          </Menu>
+        {/* Status, Priority, Assigned Users, and Dates */}
+        <Box display="flex" flexDirection="column" alignItems="flex-start" gap={2}>
+          <Box display="flex" flexDirection="column" gap={1}>
+            {/* Status */}
+            <Chip
+              label={task.status}
+              color={task.status === 'Completed' ? 'success' : task.status === 'In Progress' ? 'primary' : 'default'}
+              onClick={handleStatusClick}
+            />
+            <Menu anchorEl={statusAnchorEl} open={Boolean(statusAnchorEl)} onClose={() => handleStatusClose()}>
+              {statusOptions.map((status) => (
+                <MenuItem key={status} onClick={() => handleStatusClose(status)}>
+                  {status}
+                </MenuItem>
+              ))}
+            </Menu>
+
+            {/* Priority */}
+            <Chip
+              label={task.priority}
+              color={
+                task.priority === 'High' ? 'error' : task.priority === 'Medium' ? 'warning' : 'success'
+              }
+              onClick={handlePriorityClick}
+            />
+            <Menu anchorEl={priorityAnchorEl} open={Boolean(priorityAnchorEl)} onClose={() => handlePriorityClose()}>
+              {priorityOptions.map((priority) => (
+                <MenuItem key={priority} onClick={() => handlePriorityClose(priority)}>
+                  {priority}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
 
           {/* Assigned Users */}
-          <Box display="flex" alignItems="center">
-            <Stack direction="row" spacing={1}>
+          <Box>
+            <Typography variant="subtitle2">Assigned Users:</Typography>
+            <Stack direction="column" spacing={1}>
               {updatedTask.assignedUsers.map((user) => (
-                <Box key={user.id} display="flex" alignItems="center">
-                  <Avatar
-                    src={user.avatar || ''}
-                    alt={user.name}
-                    sx={{ width: 30, height: 30, marginRight: '5px' }}
-                  />
+                <Box key={user.id} display="flex" alignItems="center" gap={1}>
+                  <Avatar src={user.avatar || ''} alt={user.name} sx={{ width: 30, height: 30 }} />
                   <Typography variant="body2">{user.name}</Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleAssignClose(user.id)} // Remove user
-                    sx={{ marginLeft: '5px' }}
-                  >
+                  <IconButton size="small" onClick={() => handleAssignClose(user.id)}>
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Box>
               ))}
             </Stack>
-            <IconButton onClick={handleAssignClick}>
-              <MoreVertIcon />
-            </IconButton>
+            <Button
+              variant="outlined"
+              startIcon={<PersonAddIcon />}
+              onClick={handleAssignClick}
+              sx={{ mt: 1 }}
+            >
+              Assign Users
+            </Button>
             <Menu anchorEl={assignAnchorEl} open={Boolean(assignAnchorEl)} onClose={() => handleAssignClose()}>
               {users.map((user) => (
                 <MenuItem key={user.id} onClick={() => handleAssignClose(user.id)}>
@@ -190,34 +221,44 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({ task, users, onUpdateTa
               ))}
             </Menu>
           </Box>
-        </Box>
-      </Box>
 
-      {/* Task Description */}
-      <Box mb={3}>
-        <Typography variant="h6">Description</Typography>
-        {isEditing ? (
-          <ReactQuill
-            value={updatedTask.description}
-            onChange={(value) => setUpdatedTask({ ...updatedTask, description: value })}
-            theme="snow"
-            placeholder="Enter task description..."
-            modules={{
-              toolbar: [
-                [{ header: '1' }, { header: '2' }, { font: [] }],
-                [{ list: 'ordered' }, { list: 'bullet' }],
-                ['bold', 'italic', 'underline', 'strike'],
-                ['link', 'image'],
-                ['clean'],
-              ],
-            }}
-            formats={['header', 'font', 'list', 'bullet', 'bold', 'italic', 'underline', 'strike', 'link', 'image']}
-          />
-        ) : (
-          <Typography variant="body1" color="textSecondary" sx={{ marginTop: 1, marginBottom: 3 }}>
-            <div dangerouslySetInnerHTML={{ __html: task.description }} />
-          </Typography>
-        )}
+          {/* Start Date */}
+          {isEditing ? (
+            <TextField
+              label="Start Date"
+              type="date"
+              value={dayjs(updatedTask.startDate).format('YYYY-MM-DD')}
+              onChange={(e) => setUpdatedTask({ ...updatedTask, startDate: e.target.value })}
+              margin="normal"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+          ) : (
+            <Typography variant="body2">
+              <strong>Start Date:</strong> {dayjs(task.startDate).format('MMMM D, YYYY')}
+            </Typography>
+          )}
+
+          {/* Due Date */}
+          {isEditing ? (
+            <TextField
+              label="Due Date"
+              type="date"
+              value={dayjs(updatedTask.dueDate).format('YYYY-MM-DD')}
+              onChange={(e) => setUpdatedTask({ ...updatedTask, dueDate: e.target.value })}
+              margin="normal"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+          ) : (
+            <Typography variant="body2">
+              <strong>Due Date:</strong> {dayjs(task.dueDate).format('MMMM D, YYYY')}
+              {dayjs().isAfter(task.dueDate) && task.status !== 'Completed' && (
+                <span style={{ color: 'red' }}> (Overdue)</span>
+              )}
+            </Typography>
+          )}
+        </Box>
       </Box>
 
       {/* Action Buttons */}

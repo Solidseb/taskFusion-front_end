@@ -5,6 +5,7 @@ import { fetchTasksByCapsule, createTask, updateTask, deleteTask } from "../serv
 import axios from "axios";
 import { Task, User } from "./types";
 import { toast } from "react-toastify";
+import dayjs from "dayjs";
 
 interface TaskManagerProps {
   capsuleId: number;
@@ -82,12 +83,13 @@ const TaskManager: React.FC<TaskManagerProps> = ({ capsuleId, users }) => {
     }
   };
 
-  // Handle task completion via the correct API route
+  // Handle task completion and update the completedDate in the backend
   const handleToggleComplete = async (taskId: number, completed: boolean) => {
     try {
-      // Send request to the backend's /completion route
+      // Send request to the backend to update the completion status and completedDate
       await axios.put(`http://localhost:3000/tasks/${taskId}/completion`, {
         completed,
+        completedDate: completed ? dayjs().toISOString() : null, // Set completedDate to the current date or clear it
       });
 
       toast.success(`Task marked as ${completed ? 'completed' : 'not completed'}`);

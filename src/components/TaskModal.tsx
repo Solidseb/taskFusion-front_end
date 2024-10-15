@@ -8,7 +8,7 @@ interface TaskModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (taskData: any) => void;
-  users: { id: number, name: string }[]; // Make sure the id is correctly typed as number or string
+  users: { id: number, name: string }[];
   initialTaskData?: any; // Data for editing an existing task
 }
 
@@ -16,16 +16,18 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
   // Local state for the form fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('To Do');
   const [priority, setPriority] = useState('Medium');
-  const [assignedUserIds, setAssignedUserIds] = useState<number[]>([]); // Use string[] if user ids are strings
+  const [assignedUserIds, setAssignedUserIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (initialTaskData) {
       // Prefill form with existing task data if available
       setTitle(initialTaskData.title || '');
       setDescription(initialTaskData.description || '');
+      setStartDate(initialTaskData.startDate || '');
       setDueDate(initialTaskData.dueDate || '');
       setStatus(initialTaskData.status || 'To Do');
       setPriority(initialTaskData.priority || 'Medium');
@@ -38,6 +40,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
   const resetForm = () => {
     setTitle('');
     setDescription('');
+    setStartDate('');
     setDueDate('');
     setStatus('To Do');
     setPriority('Medium');
@@ -48,6 +51,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
     const taskData = {
       title,
       description,
+      startDate: startDate || undefined,
       dueDate: dueDate || undefined,
       status,
       priority,
@@ -77,6 +81,20 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
           variant="outlined"
           fullWidth
         />
+        {/* Start Date */}
+        <TextField
+          label="Start Date"
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          margin="normal"
+          variant="outlined"
+          fullWidth
+          InputLabelProps={{
+            shrink: true,
+          }}
+        />
+        {/* Due Date */}
         <TextField
           label="Due Date"
           type="date"
@@ -109,23 +127,19 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
           <InputLabel>Assign Users</InputLabel>
           <Select
             multiple
-            value={assignedUserIds} // Ensure assignedUserIds is an array
-            onChange={(e) => setAssignedUserIds(e.target.value as number[])} // Use string[] if user ids are strings
-            renderValue={(selected) => (
-              (selected.length > 0
-                ? selected.map((id) => users.find((user) => user.id === id)?.name).join(', ')
-                : 'Unassigned') // Handle empty selected case
-            )}
+            value={assignedUserIds}
+            onChange={(e) => setAssignedUserIds(e.target.value as number[])}
+            renderValue={(selected) =>
+              selected
+                .map((id) => users.find((user) => user.id === id)?.name)
+                .join(', ')
+            }
           >
-            {users.length > 0 ? (
-              users.map((user) => (
-                <MenuItem key={user.id} value={user.id}>
-                  {user.name}
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled>No Users Available</MenuItem> // Handle empty users case
-            )}
+            {users.map((user) => (
+              <MenuItem key={user.id} value={user.id}>
+                {user.name}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <Box mt={2}>

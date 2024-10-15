@@ -5,6 +5,7 @@ export interface User {
   }
   
   export interface Task {
+    completedDate: string;
     id: number;
     title: string; 
     description: string;
@@ -12,6 +13,7 @@ export interface User {
     assignedUsers: User[];
     status: string;
     priority: string;
+    startDate: string;
   }
   
  export  interface Comment {
