@@ -1,24 +1,21 @@
 import React, { useEffect, useState, useCallback } from "react";
 import TaskList from "./TaskList";
 import TaskModal from "./TaskModal";
-import { fetchTasksByCapsule, createTask, updateTask, deleteTask } from "../services/taskService";
-import axios from "axios";
+import { fetchTasksByCapsule, createTask, updateTask, deleteTask, completeTask } from "../services/taskService";
 import { Task, User } from "./types";
 import { toast } from "react-toastify";
-import dayjs from "dayjs";
+import { useCapsule } from '../context/CapsuleContext'; // Use CapsuleContext
 
-interface TaskManagerProps {
-  capsuleId: number;
-  users: User[];
-}
-
-const TaskManager: React.FC<TaskManagerProps> = ({ capsuleId, users }) => {
+const TaskManager: React.FC<{ users: User[] }> = ({ users }) => {
+  const { capsuleId } = useCapsule(); // Get capsuleId from context
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [taskForEditing, setTaskForEditing] = useState<Task | null>(null);
 
   // Memoize loadTasks using useCallback to prevent re-creation on every render
   const loadTasks = useCallback(async () => {
+    if (!capsuleId) return; // Ensure capsuleId is available
+
     try {
       const tasksList = await fetchTasksByCapsule(capsuleId);
       const formattedTasks = tasksList.map((task: Task) => ({
@@ -53,6 +50,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({ capsuleId, users }) => {
   };
 
   const handleSaveTask = async (taskData: any) => {
+    if (!capsuleId) return; // Ensure capsuleId is available
+
     try {
       if (taskForEditing) {
         // Update existing task
@@ -72,6 +71,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({ capsuleId, users }) => {
   };
 
   const handleDeleteTask = async (taskId: number) => {
+    if (!capsuleId) return; // Ensure capsuleId is available
+
     if (window.confirm("Are you sure you want to delete this task?")) {
       try {
         await deleteTask(capsuleId, taskId);
@@ -83,15 +84,20 @@ const TaskManager: React.FC<TaskManagerProps> = ({ capsuleId, users }) => {
     }
   };
 
-  // Handle task completion and update the completedDate in the backend
   const handleToggleComplete = async (taskId: number, completed: boolean) => {
     try {
+      const task = tasks.find(t => t.id === taskId);
+      
+      if (!task) {
+        throw new Error('Task not found');
+      }
+      // Check if all subtasks are completed before allowing the task to be marked as completed
+      if (completed && (task.subtasks?.some(subtask => subtask.status !== 'Completed') ?? false)) {
+        toast.error("Cannot complete task because not all subtasks are completed.");
+        return;
+      }
       // Send request to the backend to update the completion status and completedDate
-      await axios.put(`http://localhost:3000/tasks/${taskId}/completion`, {
-        completed,
-        completedDate: completed ? dayjs().toISOString() : null, // Set completedDate to the current date or clear it
-      });
-
+      await completeTask(taskId, completed);
       toast.success(`Task marked as ${completed ? 'completed' : 'not completed'}`);
       
       // Refresh task list

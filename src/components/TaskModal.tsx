@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Modal, Box, Button, TextField,
-  FormControl, InputLabel, Select, MenuItem
+  Modal,
+  Box,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 
 interface TaskModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (taskData: any) => void;
+  onSave: (taskData: any) => void;  // This will handle both task and subtask
   users: { id: number, name: string }[];
-  initialTaskData?: any; // Data for editing an existing task
+  initialTaskData?: any;
 }
 
 const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, initialTaskData }) => {
-  // Local state for the form fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -24,7 +29,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
 
   useEffect(() => {
     if (initialTaskData) {
-      // Prefill form with existing task data if available
       setTitle(initialTaskData.title || '');
       setDescription(initialTaskData.description || '');
       setStartDate(initialTaskData.startDate || '');
@@ -55,7 +59,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
       dueDate: dueDate || undefined,
       status,
       priority,
-      assignedUserIds
+      assignedUserIds,
     };
     onSave(taskData);
     resetForm();
@@ -66,7 +70,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
     <Modal open={open} onClose={onClose}>
       <Box sx={{ width: 400, p: 3, bgcolor: 'background.paper', margin: 'auto', mt: '20vh' }}>
         <TextField
-          label="Task Title"
+          label="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           margin="normal"
@@ -74,14 +78,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
           fullWidth
         />
         <TextField
-          label="Task Description"
+          label="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           margin="normal"
           variant="outlined"
           fullWidth
         />
-        {/* Start Date */}
         <TextField
           label="Start Date"
           type="date"
@@ -90,11 +93,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
           margin="normal"
           variant="outlined"
           fullWidth
-          InputLabelProps={{
-            shrink: true,
-          }}
+          InputLabelProps={{ shrink: true }}
         />
-        {/* Due Date */}
         <TextField
           label="Due Date"
           type="date"
@@ -103,9 +103,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
           margin="normal"
           variant="outlined"
           fullWidth
-          InputLabelProps={{
-            shrink: true,
-          }}
+          InputLabelProps={{ shrink: true }}
         />
         <FormControl margin="normal" fullWidth>
           <InputLabel>Status</InputLabel>
@@ -130,9 +128,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
             value={assignedUserIds}
             onChange={(e) => setAssignedUserIds(e.target.value as number[])}
             renderValue={(selected) =>
-              selected
-                .map((id) => users.find((user) => user.id === id)?.name)
-                .join(', ')
+              selected.map((id) => users.find((user) => user.id === id)?.name).join(', ')
             }
           >
             {users.map((user) => (
@@ -144,7 +140,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
         </FormControl>
         <Box mt={2}>
           <Button variant="contained" onClick={handleSave} disabled={!title.trim()}>
-            Save Task
+            Save
           </Button>
         </Box>
       </Box>

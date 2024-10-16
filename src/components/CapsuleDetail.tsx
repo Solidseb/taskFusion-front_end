@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { fetchCapsuleDetails } from "../services/capsuleService";
-import { Box, Typography, CircularProgress } from "@mui/material";
-import TaskManager from "./TaskManager";
-import { User } from "./types";
-import { toast } from "react-toastify";
-import { fetchUsers } from "../services/userService";
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { fetchCapsuleDetails } from '../services/capsuleService';
+import { Box, Typography, CircularProgress } from '@mui/material';
+import TaskManager from './TaskManager';
+import { User } from './types';
+import { toast } from 'react-toastify';
+import { fetchUsers } from '../services/userService';
+import { useCapsule } from '../context/CapsuleContext'; // Import the useCapsule hook
 
 const CapsuleDetail: React.FC = () => {
-  const { id: capsuleId } = useParams<{ id: string }>();
+  const { id: capsuleIdParam } = useParams<{ id: string }>();
+  const { setCapsuleId } = useCapsule(); // Get setCapsuleId from context
   const [capsule, setCapsule] = useState<{ title: string; description: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
-     
       try {
         const response = await fetchUsers();
         setUsers(response);
       } catch (err) {
-        console.error("Failed to fetch users:", err);
+        console.error('Failed to fetch users:', err);
       }
     };
     fetchUser();
@@ -30,18 +31,19 @@ const CapsuleDetail: React.FC = () => {
     async function loadCapsule() {
       try {
         setLoading(true);
-        if (capsuleId) {
-          const capsuleDetails = await fetchCapsuleDetails(parseInt(capsuleId));
+        if (capsuleIdParam) {
+          const capsuleDetails = await fetchCapsuleDetails(parseInt(capsuleIdParam));
           setCapsule(capsuleDetails);
+          setCapsuleId(parseInt(capsuleIdParam)); // Set capsuleId in context
         }
       } catch (err) {
-        toast.error("Failed to load capsule details.");
+        toast.error('Failed to load capsule details.');
       } finally {
         setLoading(false);
       }
     }
     loadCapsule();
-  }, [capsuleId]);
+  }, [capsuleIdParam, setCapsuleId]);
 
   if (loading) {
     return <CircularProgress />;
@@ -55,7 +57,7 @@ const CapsuleDetail: React.FC = () => {
 
       {/* Task Manager */}
       <Box my={2}>
-        <TaskManager capsuleId={parseInt(capsuleId!)} users={users} />
+        <TaskManager users={users} /> {/* No need to pass capsuleId as it's in context */}
       </Box>
     </div>
   );

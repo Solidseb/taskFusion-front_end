@@ -14,6 +14,8 @@ export interface User {
     status: string;
     priority: string;
     startDate: string;
+    parent_id?: number;
+    subtasks?: Task[];
   }
   
  export  interface Comment {
