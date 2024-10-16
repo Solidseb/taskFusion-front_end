@@ -26,3 +26,13 @@ export interface User {
     parentCommentId?: number;
     replies?: Comment[];
   }
+
+  export interface TaskHistory {
+    id: number;
+    taskId: number;
+    changeType: 'taskCompleted' | 'newComment' | 'fileUploaded' | 'statusChanged' | 'assignedUserChanged' | 'taskCreated' | 'taskEdited' | 'other';
+    changeDescription: string;
+    changedBy: string;
+    timestamp: string;  // ISO string format
+  }
+  

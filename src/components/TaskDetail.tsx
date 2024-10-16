@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment, fetchSubtasks, createSubtask, completeTask, deleteSubtask } from '../services/taskService';
+import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment, fetchSubtasks, createSubtask, completeTask, deleteSubtask, updateSubtask } from '../services/taskService'; // updateSubtask added here
 import { fetchUsers } from '../services/userService';
-import { CircularProgress, Box, Typography, Button, Divider, Card } from '@mui/material';
+import { CircularProgress, Box, Typography, Divider, Card, Tabs, Tab } from '@mui/material';
 import { toast } from 'react-toastify';
 import TaskDetailOverview from './TaskDetailOverview';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import { User, Task, Comment } from './types';
 import dayjs from 'dayjs';
-import SubtaskList from './SubtaskList';
-import TaskModal from './TaskModal';
-import { useCapsule } from '../context/CapsuleContext'; // Import the useCapsule hook
+import SubtaskTab from './SubtaskTab';
+import CommentTab from './CommentTab';
+import FileAttachmentTab from './FileAttachmentTab';
+import { User, Task, Comment } from './types';
+import { useCapsule } from '../context/CapsuleContext';
 
 const TaskDetail: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
@@ -23,11 +22,11 @@ const TaskDetail: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [subtaskForEditing, setSubtaskForEditing] = useState<Task | null>(null);  // State for editing subtask
+  const [activeTab, setActiveTab] = useState(0);  // State to manage active tab
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
+  // Fetching users for assigning to tasks
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -40,6 +39,7 @@ const TaskDetail: React.FC = () => {
     fetchUser();
   }, []);
 
+  // Loading task details, subtasks, and comments
   useEffect(() => {
     const loadTaskDetails = async () => {
       setLoading(true);
@@ -67,9 +67,47 @@ const TaskDetail: React.FC = () => {
     loadTaskDetails();
   }, [taskId]);
 
+  // Helper function to build comment hierarchy
+  const buildCommentHierarchy = (comments: Comment[]) => {
+    const commentMap: { [key: number]: Comment } = {};
+    const rootComments: Comment[] = [];
+
+    comments.forEach((comment) => {
+      comment.replies = [];
+      commentMap[comment.id] = comment;
+
+      if (comment.parentCommentId) {
+        if (commentMap[comment.parentCommentId]) {
+          commentMap[comment.parentCommentId].replies!.push(comment);
+        }
+      } else {
+        rootComments.push(comment);
+      }
+    });
+
+    return rootComments;
+  };
+
+  // Handle adding new comments
+  const handleAddComment = async () => {
+    if (newComment.trim() && taskId) {
+      try {
+        await createComment(parseInt(taskId), newComment, currentUser.id, replyToCommentId || undefined);
+        const updatedComments = await fetchComments(parseInt(taskId));
+        setComments(buildCommentHierarchy(updatedComments));
+        setNewComment('');
+        setReplyToCommentId(null);
+        toast.success('Comment added successfully!');
+      } catch (error) {
+        toast.error('Failed to add comment.');
+      }
+    }
+  };
+
+  // Task and subtask handling
   const handleUpdateTask = async (updatedTask: Task) => {
     try {
-      await updateTask(capsuleId!, updatedTask.id, updatedTask); // Use capsuleId from context
+      await updateTask(capsuleId!, updatedTask.id, updatedTask); 
       setTask(updatedTask);
       toast.success('Task updated successfully!');
     } catch (error) {
@@ -79,22 +117,26 @@ const TaskDetail: React.FC = () => {
 
   const handleDeleteTask = async (taskId: number) => {
     try {
-      await deleteTask(capsuleId!, taskId); // Use capsuleId from context
+      await deleteTask(capsuleId!, taskId); 
       toast.success('Task deleted successfully!');
     } catch (error) {
       toast.error('Failed to delete task.');
     }
   };
 
-  const handleAddSubtask = async (taskId: number, subtaskData: any) => {
+  const handleAddSubtask = async (subtaskData: any) => {
     try {
-      await createSubtask(taskId, capsuleId!, subtaskData.title); // Use capsuleId from context
-      const updatedSubtasks = await fetchSubtasks(taskId);
+      await createSubtask(task!.id, capsuleId!, subtaskData.title); 
+      const updatedSubtasks = await fetchSubtasks(task!.id);
       setSubtasks(updatedSubtasks);
       toast.success('Subtask added successfully!');
     } catch (error) {
       toast.error('Failed to add subtask.');
     }
+  };
+
+  const handleEditSubtask = (subtask: Task) => {
+    setSubtasks(subtasks.map((s) => (s.id === subtask.id ? subtask : s)));
   };
 
   const handleDeleteSubtask = async (subtaskId: number) => {
@@ -117,93 +159,20 @@ const TaskDetail: React.FC = () => {
     }
   };
 
-  // Handle subtask editing
-  const handleEditSubtask = (subtask: Task) => {
-    setSubtaskForEditing(subtask);
-    setTaskModalOpen(true);
-  };
-
-  const handleSaveTaskOrSubtask = async (taskData: any) => {
+  // New handler for updating a subtask (required by SubtaskTab)
+  const handleUpdateSubtask = async (subtaskId: number, updatedSubtask: Task) => {
     try {
-      if (subtaskForEditing) {
-        // Use PUT to update the existing subtask
-        await updateTask(capsuleId!, subtaskForEditing.id, { ...subtaskForEditing, ...taskData });
-        setSubtasks(subtasks.map((subtask) => (subtask.id === subtaskForEditing.id ? { ...subtask, ...taskData } : subtask)));
-        setSubtaskForEditing(null);
-      } else {
-        // Create a new subtask (Use POST)
-        await handleAddSubtask(task!.id, taskData);
-      }
-      toast.success(subtaskForEditing ? 'Subtask updated successfully!' : 'Subtask added successfully!');
-      setTaskModalOpen(false);
+      await updateSubtask(subtaskId, updatedSubtask);
+      setSubtasks(subtasks.map((subtask) => (subtask.id === subtaskId ? updatedSubtask : subtask)));
+      toast.success('Subtask updated successfully!');
     } catch (error) {
-      toast.error('Failed to save subtask.');
-    }
-  };
-  
-
-  const handleAddComment = async () => {
-    if (newComment.trim() && taskId) {
-      try {
-        await createComment(parseInt(taskId), newComment, currentUser.id, replyToCommentId || undefined);
-        const updatedComments = await fetchComments(parseInt(taskId));
-        setComments(buildCommentHierarchy(updatedComments));
-        setNewComment('');
-        setReplyToCommentId(null);
-        toast.success('Comment added successfully!');
-      } catch (error) {
-        toast.error('Failed to add comment.');
-      }
+      toast.error('Failed to update subtask.');
     }
   };
 
-  const getAuthorName = (authorId: number) => {
-    const user = users.find((user) => user.id === authorId);
-    return user ? user.name : 'Unknown';
-  };
-
-  const buildCommentHierarchy = (comments: Comment[]) => {
-    const commentMap: { [key: number]: Comment } = {};
-    const rootComments: Comment[] = [];
-
-    comments.forEach((comment) => {
-      comment.replies = [];
-      commentMap[comment.id] = comment;
-
-      if (comment.parentCommentId) {
-        if (commentMap[comment.parentCommentId]) {
-          commentMap[comment.parentCommentId].replies!.push(comment);
-        }
-      } else {
-        rootComments.push(comment);
-      }
-    });
-
-    return rootComments;
-  };
-
-  const renderComments = (commentsList: Comment[]) => {
-    return commentsList.map((comment) => (
-      <Box
-        key={comment.id}
-        mt={2}
-        p={1}
-        border="1px solid #ccc"
-        borderRadius={1}
-        style={{ marginLeft: comment.parentCommentId ? '20px' : '0px' }}
-      >
-        <Typography variant="body2">
-          <strong>{getAuthorName(comment.author)}</strong> at {new Date(comment.createdAt).toLocaleString()}
-        </Typography>
-        <Typography variant="body1" dangerouslySetInnerHTML={{ __html: comment.text }} />
-        <Button size="small" onClick={() => setReplyToCommentId(comment.id)}>
-          Reply
-        </Button>
-        {comment.replies && comment.replies.length > 0 && (
-          <Box ml={2}>{renderComments(comment.replies)}</Box>
-        )}
-      </Box>
-    ));
+  // Tab handling
+  const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    setActiveTab(newValue);
   };
 
   if (loading) {
@@ -224,36 +193,41 @@ const TaskDetail: React.FC = () => {
             />
           </Card>
 
-          {!task.parent_id && (
-            <>
-              <Typography variant="h5" gutterBottom>
-                Subtasks
-              </Typography>
+          {/* Tabs for File Attachments and Comments always visible */}
+          <Tabs value={activeTab} onChange={handleTabChange}>
+            {!task.parent_id && <Tab label="Subtasks" />}
+            <Tab label="File Attachments" />
+            <Tab label="Comments" />
+          </Tabs>
 
-              <SubtaskList
-                subtasks={subtasks}
-                onDeleteSubtask={handleDeleteSubtask}
-                onToggleSubtaskComplete={handleToggleSubtaskComplete}
-                onEditSubtask={handleEditSubtask}  // Pass the subtask edit handler here
-              />
+          {/* Subtasks Tab - Only visible when task is not a subtask */}
+          {activeTab === 0 && !task.parent_id && (
+            <SubtaskTab
+              taskId={task.id}
+              subtasks={subtasks}
+              users={users}
+              onDeleteSubtask={handleDeleteSubtask}
+              onToggleSubtaskComplete={handleToggleSubtaskComplete}
+              onEditSubtask={handleEditSubtask}
+              onAddSubtask={handleAddSubtask}
+              onUpdateSubtask={handleUpdateSubtask} // Added missing prop
+            />
+          )}
 
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setTaskModalOpen(true)}
-                sx={{ mt: 2 }}
-              >
-                Add Subtask
-              </Button>
+          {/* File Attachments Tab */}
+          {activeTab === (task.parent_id ? 0 : 1) && <FileAttachmentTab taskId={task.id} />}
 
-              <TaskModal
-                open={taskModalOpen}
-                onClose={() => setTaskModalOpen(false)}
-                onSave={handleSaveTaskOrSubtask}  // General handler for both task and subtask
-                users={users}
-                initialTaskData={subtaskForEditing || undefined}  // Preload the subtask if editing
-              />
-            </>
+          {/* Comments Tab */}
+          {activeTab === (task.parent_id ? 1 : 2) && (
+            <CommentTab
+              users={users}
+              comments={comments}
+              newComment={newComment}
+              setNewComment={setNewComment}
+              handleAddComment={handleAddComment}
+              replyToCommentId={replyToCommentId}
+              setReplyToCommentId={setReplyToCommentId}
+            />
           )}
 
           {task.completedDate && (
@@ -263,30 +237,6 @@ const TaskDetail: React.FC = () => {
           )}
 
           <Divider sx={{ my: 4 }} />
-          <Box mt={2}>
-            <Typography variant="h6">Comments</Typography>
-            {comments.length > 0 ? renderComments(comments) : <Typography variant="body2">No comments yet.</Typography>}
-
-            <ReactQuill
-              value={newComment}
-              onChange={setNewComment}
-              theme="snow"
-              placeholder="Add a comment..."
-              modules={{
-                toolbar: [
-                  [{ header: '1' }, { header: '2' }, { font: [] }],
-                  [{ list: 'ordered' }, { list: 'bullet' }],
-                  ['bold', 'italic', 'underline', 'strike'],
-                  ['link', 'image'],
-                  ['clean'],
-                ],
-              }}
-              formats={['header', 'font', 'list', 'bullet', 'bold', 'italic', 'underline', 'strike', 'link', 'image']}
-            />
-            <Button variant="contained" onClick={handleAddComment} disabled={!newComment.trim()} sx={{ mt: 2 }}>
-              {replyToCommentId ? 'Post Reply' : 'Post Comment'}
-            </Button>
-          </Box>
         </>
       ) : (
         <Typography variant="body2">No task found.</Typography>

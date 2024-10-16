@@ -11,25 +11,27 @@ import {
   Box,
   Typography,
   LinearProgress,
+  Tooltip, 
+  Avatar
 } from '@mui/material';
 import { Link } from 'react-router-dom';  // Import Link for navigation
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';  // Edit Icon for subtask editing
-import { Task } from './types';
+import { Task } from './types';  // Ensure you import the User type
 import TaskFilters from './TaskFilters'; // Reuse filters for subtasks
 
 interface SubtaskListProps {
   subtasks: Task[];
   onDeleteSubtask: (subtaskId: number) => void;
   onToggleSubtaskComplete: (subtaskId: number, completed: boolean) => void;
-  onEditSubtask: (subtask: Task) => void;  // New prop for editing subtasks
+  onEditSubtask: (subtask: Task) => void;
 }
 
 const SubtaskList: React.FC<SubtaskListProps> = ({
   subtasks,
   onDeleteSubtask,
   onToggleSubtaskComplete,
-  onEditSubtask,  // Destructure the new edit prop
+  onEditSubtask,
 }) => {
   const [filteredSubtasks, setFilteredSubtasks] = useState<Task[]>(subtasks);
   const [filters, setFilters] = useState({ priority: '', status: '' });
@@ -75,6 +77,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
           <TableHead>
             <TableRow>
               <TableCell>Subtask Name</TableCell>
+              <TableCell>Assigned Users</TableCell> {/* New column for assigned users */}
               <TableCell>Start Date</TableCell>
               <TableCell>Due Date</TableCell>
               <TableCell>Completed Date</TableCell>
@@ -93,6 +96,21 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                       {subtask.title}
                     </Link>
                   </TableCell>
+
+                  {/* Assigned Users */}
+                      <TableCell>
+                  {subtask.assignedUsers && subtask.assignedUsers.length > 0 ? (
+                    subtask.assignedUsers.map((user) => (
+                      <Tooltip title={user.name} key={user.id}>
+                        <Avatar src={user.avatar} style={{ marginRight: 5 }}>
+                          {user.name[0].toUpperCase()}
+                        </Avatar>
+                      </Tooltip>
+                    ))
+                  ) : (
+                    'Unassigned'
+                  )}
+                </TableCell>
 
                   <TableCell>
                     {subtask.startDate ? new Date(subtask.startDate).toLocaleDateString() : 'No start date'}
@@ -142,7 +160,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7}>No subtasks found</TableCell>
+                <TableCell colSpan={8}>No subtasks found</TableCell>
               </TableRow>
             )}
           </TableBody>
