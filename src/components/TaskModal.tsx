@@ -14,7 +14,7 @@ interface TaskModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (taskData: any) => void;  // This will handle both task and subtask
-  users: { id: number, name: string }[];
+  users: { id: string, name: string }[];
   initialTaskData?: any;
 }
 
@@ -25,7 +25,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('To Do');
   const [priority, setPriority] = useState('Medium');
-  const [assignedUserIds, setAssignedUserIds] = useState<number[]>([]);
+  const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (initialTaskData) {
@@ -110,7 +110,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
           <Select value={status} onChange={(e) => setStatus(e.target.value)}>
             <MenuItem value="To Do">To Do</MenuItem>
             <MenuItem value="In Progress">In Progress</MenuItem>
-            <MenuItem value="Completed">Completed</MenuItem>
           </Select>
         </FormControl>
         <FormControl margin="normal" fullWidth>
@@ -126,7 +125,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
           <Select
             multiple
             value={assignedUserIds}
-            onChange={(e) => setAssignedUserIds(e.target.value as number[])}
+            onChange={(e) => setAssignedUserIds(e.target.value as string[])}
             renderValue={(selected) =>
               selected.map((id) => users.find((user) => user.id === id)?.name).join(', ')
             }

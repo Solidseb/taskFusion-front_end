@@ -6,6 +6,7 @@ import { Task, User } from '../components/types';
 import TaskStatusSelector from './TaskStatusSelector';
 import TaskPrioritySelector from './TaskPrioritySelector';
 import AssignedUsers from './AssignedUsers';
+import dayjs from 'dayjs';
 
 interface TaskDetailProps {
   task: Task;
@@ -99,6 +100,11 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
           </>
         )}
       </Box>
+      {task.completedDate && (
+            <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+              Completed on: {dayjs(task.completedDate).format('MMMM D, YYYY')}
+            </Typography>
+          )}
     </Box>
   );
 };

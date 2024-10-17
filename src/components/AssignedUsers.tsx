@@ -18,7 +18,7 @@ const AssignedUsers: React.FC<AssignedUsersProps> = ({ task, users, onUpdateTask
     setAssignAnchorEl(event.currentTarget);
   };
 
-  const handleAssignClose = (userId?: number) => {
+  const handleAssignClose = (userId?: string) => {
     setAssignAnchorEl(null);
 
     if (userId !== undefined) {
@@ -27,8 +27,8 @@ const AssignedUsers: React.FC<AssignedUsersProps> = ({ task, users, onUpdateTask
         ? task.assignedUsers.filter((user) => user.id !== userId)
         : [...task.assignedUsers, users.find((user) => user.id === userId)!];
 
-      onUpdateTask({ ...task, assignedUsers: updatedAssignedUsers });
-      setUpdatedTask({ ...task, assignedUsers: updatedAssignedUsers });
+      onUpdateTask({ ...task, assignedUserIds: updatedAssignedUsers.map((user: { id: any }) => user.id) });
+      setUpdatedTask({ ...task, assignedUserIds: updatedAssignedUsers.map((user: { id: any }) => user.id) });
     }
   };
 

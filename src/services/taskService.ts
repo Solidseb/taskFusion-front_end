@@ -3,8 +3,9 @@ import dayjs from "dayjs";
 const API_URL = 'http://localhost:3000/tasks';
 
 // Fetch all users
+const token = localStorage.getItem('token');
+
 export const fetchUsers = async () => {
-  const token = localStorage.getItem('token');
   const response = await axios.get(`${API_URL}/users`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -15,49 +16,81 @@ export const fetchUsers = async () => {
 
 // Fetch tasks by capsule ID
 export const fetchTasksByCapsule = async (capsuleId: number) => {
-  const response = await axios.get(`${API_URL}/capsule/${capsuleId}`);
+  const response = await axios.get(`${API_URL}/capsule/${capsuleId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
 // Create a new task or subtask
 export const createTask = async (capsuleId: number, taskData: any) => {
-  const response = await axios.post(API_URL, { capsuleId, ...taskData });
+  const response = await axios.post(API_URL, { capsuleId, ...taskData }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
 // Update an existing task or subtask
 export const updateTask = async (capsuleId: number, taskId: number, taskData: any) => {
-  const response = await axios.put(`${API_URL}/${taskId}`, { capsuleId, ...taskData });
+  const response = await axios.put(`${API_URL}/${taskId}`, { capsuleId, ...taskData }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
 // Delete a task or subtask
 export const deleteTask = async (capsuleId: number, taskId: number) => {
-  const response = await axios.delete(`${API_URL}/${taskId}`);
+  const response = await axios.delete(`${API_URL}/${taskId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
 // Fetch subtasks by parent task ID
 export const fetchSubtasks = async (parentId: number) => {
-  const response = await axios.get(`${API_URL}?parentId=${parentId}`);
+  const response = await axios.get(`${API_URL}?parentId=${parentId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
 // Create a new subtask
 export const createSubtask = async (parent_id: number, capsuleId: number, title: string) => {
-  const response = await axios.post(API_URL, { title, capsuleId, parent_id });
+  const response = await axios.post(API_URL, { title, capsuleId, parent_id }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
 // Update an existing subtask
 export const updateSubtask = async (subtaskId: number, taskData: any) => {
-  const response = await axios.put(`${API_URL}/${subtaskId}`, taskData);
+  const response = await axios.put(`${API_URL}/${subtaskId}`, taskData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
 // Delete a subtask
 export const deleteSubtask = async (subtaskId: number) => {
-  const response = await axios.delete(`${API_URL}/${subtaskId}`);
+  const response = await axios.delete(`${API_URL}/${subtaskId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
 
@@ -65,7 +98,11 @@ export const deleteSubtask = async (subtaskId: number) => {
 // Fetch task details by task ID
 export const fetchTaskDetails = async (taskId: number) => {
   try {
-    const response = await axios.get(`${API_URL}/${taskId}`);
+    const response = await axios.get(`${API_URL}/${taskId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching task details:', error);
@@ -76,7 +113,11 @@ export const fetchTaskDetails = async (taskId: number) => {
 // Fetch comments for a task
 export const fetchComments = async (taskId: number) => {
   try {
-    const response = await axios.get(`${API_URL}/${taskId}/comments`);
+    const response = await axios.get(`${API_URL}/${taskId}/comments`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching comments:', error);
@@ -87,7 +128,11 @@ export const fetchComments = async (taskId: number) => {
 // Create a new comment (rich-text HTML content)
 export const createComment = async (taskId: number, commentText: string, author: number, parentCommentId?: number) => {
   try {
-    const response = await axios.post(`${API_URL}/${taskId}/comments`, { text: commentText, author, parentCommentId });
+    const response = await axios.post(`${API_URL}/${taskId}/comments`, { text: commentText, author, parentCommentId }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error creating comment:', error);
@@ -98,7 +143,11 @@ export const createComment = async (taskId: number, commentText: string, author:
 // Update assigned users for a task
 export const updateAssignedUsers = async (taskId: number, assignedUserIds: number[]) => {
   try {
-    const response = await axios.put(`${API_URL}/${taskId}/assigned-users`, { assignedUserIds });
+    const response = await axios.put(`${API_URL}/${taskId}/assigned-users`, { assignedUserIds }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error updating assigned users:', error);
@@ -112,6 +161,10 @@ export const completeTask = async(taskId: number, completed: boolean)=> {
     const response = await axios.put(`${API_URL}/${taskId}/completion`, {
       completed,
       completedDate: completed ? dayjs().toISOString() : null, 
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data;
   } catch (error) {
@@ -119,4 +172,13 @@ export const completeTask = async(taskId: number, completed: boolean)=> {
     throw error;
   }
 
+};
+
+export const fetchTaskHistory = async (taskId: number) => {
+  const response = await axios.get(`${API_URL}/${taskId}/history`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
 };

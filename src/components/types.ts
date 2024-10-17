@@ -1,6 +1,6 @@
 export interface User {
     avatar: string | undefined;
-    id: number;
+    id: string;
     name: string;
   }
   
@@ -11,6 +11,7 @@ export interface User {
     description: string;
     dueDate: string;
     assignedUsers: User[];
+    assignedUserIds: number[],
     status: string;
     priority: string;
     startDate: string;
@@ -21,7 +22,7 @@ export interface User {
  export  interface Comment {
     id: number;
     text: string;
-    author: number;
+    author: string;
     createdAt: string;
     parentCommentId?: number;
     replies?: Comment[];
@@ -30,9 +31,13 @@ export interface User {
   export interface TaskHistory {
     id: number;
     taskId: number;
-    changeType: 'taskCompleted' | 'newComment' | 'fileUploaded' | 'statusChanged' | 'assignedUserChanged' | 'taskCreated' | 'taskEdited' | 'other';
+    changeType: 'taskCompleted' | 'newComment' | 'fileUploaded' | 'statusChanged' | 'assignedUserChanged' | 'taskCreated' | 'taskUpdated' | 'other';
     changeDescription: string;
-    changedBy: string;
+    user: {
+      avatar: undefined;
+      id: string;
+      name: string;
+    };
     timestamp: string;  // ISO string format
   }
   

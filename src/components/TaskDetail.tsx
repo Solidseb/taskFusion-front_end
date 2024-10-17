@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment, fetchSubtasks, createSubtask, completeTask, deleteSubtask, updateSubtask } from '../services/taskService'; // updateSubtask added here
+import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment, fetchSubtasks, createSubtask, completeTask, deleteSubtask, updateSubtask, fetchTaskHistory } from '../services/taskService'; // fetchTaskHistory added
 import { fetchUsers } from '../services/userService';
 import { CircularProgress, Box, Typography, Divider, Card, Tabs, Tab } from '@mui/material';
 import { toast } from 'react-toastify';
 import TaskDetailOverview from './TaskDetailOverview';
-import dayjs from 'dayjs';
 import SubtaskTab from './SubtaskTab';
 import CommentTab from './CommentTab';
 import FileAttachmentTab from './FileAttachmentTab';
-import { User, Task, Comment } from './types';
+import TaskHistoryTab from './TaskHistoryTab'; // Import TaskHistoryTab
+import { User, Task, Comment, TaskHistory } from './types';
 import { useCapsule } from '../context/CapsuleContext';
 
 const TaskDetail: React.FC = () => {
@@ -19,6 +19,7 @@ const TaskDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [comments, setComments] = useState<Comment[]>([]);
   const [subtasks, setSubtasks] = useState<Task[]>([]);
+  const [taskHistory, setTaskHistory] = useState<TaskHistory[]>([]); // Add taskHistory state
   const [newComment, setNewComment] = useState('');
   const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -39,7 +40,7 @@ const TaskDetail: React.FC = () => {
     fetchUser();
   }, []);
 
-  // Loading task details, subtasks, and comments
+  // Loading task details, subtasks, comments, and history
   useEffect(() => {
     const loadTaskDetails = async () => {
       setLoading(true);
@@ -57,6 +58,10 @@ const TaskDetail: React.FC = () => {
           const taskComments = await fetchComments(parseInt(taskId));
           const structuredComments = buildCommentHierarchy(taskComments);
           setComments(structuredComments);
+
+          // Fetch task history
+          const history = await fetchTaskHistory(parseInt(taskId)); // Fetch history
+          setTaskHistory(history);
         }
       } catch (error) {
         toast.error('Failed to load task details.');
@@ -193,11 +198,12 @@ const TaskDetail: React.FC = () => {
             />
           </Card>
 
-          {/* Tabs for File Attachments and Comments always visible */}
+          {/* Tabs for File Attachments, Comments, and History always visible */}
           <Tabs value={activeTab} onChange={handleTabChange}>
             {!task.parent_id && <Tab label="Subtasks" />}
             <Tab label="File Attachments" />
             <Tab label="Comments" />
+            <Tab label="History" />
           </Tabs>
 
           {/* Subtasks Tab - Only visible when task is not a subtask */}
@@ -230,11 +236,8 @@ const TaskDetail: React.FC = () => {
             />
           )}
 
-          {task.completedDate && (
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-              Completed on: {dayjs(task.completedDate).format('MMMM D, YYYY')}
-            </Typography>
-          )}
+          {/* Task History Tab */}
+          {activeTab === (task.parent_id ? 2 : 3) && <TaskHistoryTab history={taskHistory} users={users} />}
 
           <Divider sx={{ my: 4 }} />
         </>

@@ -24,7 +24,7 @@ const CommentTab: React.FC<CommentTabProps> = ({
   setReplyToCommentId,
 }) => {
 
-    const getAuthorName = (authorId: number) => {
+    const getAuthorName = (authorId: string) => {
         const user = users.find((user) => user.id === authorId);
         return user ? user.name : 'Unknown';
     };
