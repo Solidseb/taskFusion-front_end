@@ -11,12 +11,13 @@ export interface User {
     description: string;
     dueDate: string;
     assignedUsers: User[];
-    assignedUserIds: number[],
+    assignedUserIds: string[],
     status: string;
     priority: string;
     startDate: string;
     parent_id?: number;
     subtasks?: Task[];
+    blockers: number[];
   }
   
  export  interface Comment {

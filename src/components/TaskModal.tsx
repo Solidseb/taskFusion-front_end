@@ -13,7 +13,7 @@ import {
 interface TaskModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (taskData: any) => void;  // This will handle both task and subtask
+  onSave: (taskData: any) => void;
   users: { id: string, name: string }[];
   initialTaskData?: any;
 }
@@ -35,7 +35,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
       setDueDate(initialTaskData.dueDate || '');
       setStatus(initialTaskData.status || 'To Do');
       setPriority(initialTaskData.priority || 'Medium');
-      setAssignedUserIds(initialTaskData.assignedUserIds || []);
+      
+      // Extract user IDs from initialTaskData.assignedUsers
+      const userIds = initialTaskData.assignedUsers
+        ? initialTaskData.assignedUsers.map((user: any) => user.id)
+        : [];
+      setAssignedUserIds(userIds);
     } else {
       resetForm();
     }

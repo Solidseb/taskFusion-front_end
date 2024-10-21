@@ -1,14 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchTaskDetails, updateTask, deleteTask, fetchComments, createComment, fetchSubtasks, createSubtask, completeTask, deleteSubtask, updateSubtask, fetchTaskHistory } from '../services/taskService'; // fetchTaskHistory added
+import {
+  fetchTaskDetails,
+  updateTask,
+  deleteTask,
+  fetchComments,
+  createComment,
+  fetchSubtasks,
+  createSubtask,
+  completeTask,
+  deleteSubtask,
+  updateSubtask,
+  fetchTaskHistory,
+  fetchTasksByCapsule
+} from '../services/taskService'; // Fetching task details
 import { fetchUsers } from '../services/userService';
-import { CircularProgress, Box, Typography, Divider, Card, Tabs, Tab } from '@mui/material';
+import { CircularProgress, Box, Typography, Divider, Card, Tabs, Tab } from '@mui/material'; 
 import { toast } from 'react-toastify';
 import TaskDetailOverview from './TaskDetailOverview';
 import SubtaskTab from './SubtaskTab';
 import CommentTab from './CommentTab';
 import FileAttachmentTab from './FileAttachmentTab';
-import TaskHistoryTab from './TaskHistoryTab'; // Import TaskHistoryTab
+import TaskHistoryTab from './TaskHistoryTab'; 
 import { User, Task, Comment, TaskHistory } from './types';
 import { useCapsule } from '../context/CapsuleContext';
 
@@ -19,15 +32,44 @@ const TaskDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [comments, setComments] = useState<Comment[]>([]);
   const [subtasks, setSubtasks] = useState<Task[]>([]);
-  const [taskHistory, setTaskHistory] = useState<TaskHistory[]>([]); // Add taskHistory state
+  const [taskHistory, setTaskHistory] = useState<TaskHistory[]>([]); 
+  const [tasks, setTasks] = useState<Task[]>([]); 
   const [newComment, setNewComment] = useState('');
   const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const [activeTab, setActiveTab] = useState(0);  // State to manage active tab
+  const [activeTab, setActiveTab] = useState(0);  
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // Fetching users for assigning to tasks
+  const loadTaskDetails = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (taskId) {
+        const taskDetails = await fetchTaskDetails(parseInt(taskId));
+        setTask(taskDetails);
+
+        if (!taskDetails.parentId) {
+          const subtasks = await fetchSubtasks(parseInt(taskId));
+          setSubtasks(subtasks);
+        }
+
+        const taskComments = await fetchComments(parseInt(taskId));
+        const structuredComments = buildCommentHierarchy(taskComments);
+        setComments(structuredComments);
+
+        const history = await fetchTaskHistory(parseInt(taskId)); 
+        setTaskHistory(history);
+
+        const availableTasks = await fetchTasksByCapsule(capsuleId!);
+        setTasks(availableTasks);
+      }
+    } catch (error) {
+      toast.error('Failed to load task details.');
+    } finally {
+      setLoading(false);
+    }
+  }, [capsuleId, taskId]);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -38,41 +80,9 @@ const TaskDetail: React.FC = () => {
       }
     };
     fetchUser();
-  }, []);
-
-  // Loading task details, subtasks, comments, and history
-  useEffect(() => {
-    const loadTaskDetails = async () => {
-      setLoading(true);
-      try {
-        if (taskId) {
-          const taskDetails = await fetchTaskDetails(parseInt(taskId));
-          setTask(taskDetails);
-
-          // Only fetch subtasks if the current task is not a subtask itself
-          if (!taskDetails.parentId) {
-            const subtasks = await fetchSubtasks(parseInt(taskId));
-            setSubtasks(subtasks);
-          }
-
-          const taskComments = await fetchComments(parseInt(taskId));
-          const structuredComments = buildCommentHierarchy(taskComments);
-          setComments(structuredComments);
-
-          // Fetch task history
-          const history = await fetchTaskHistory(parseInt(taskId)); // Fetch history
-          setTaskHistory(history);
-        }
-      } catch (error) {
-        toast.error('Failed to load task details.');
-      } finally {
-        setLoading(false);
-      }
-    };
     loadTaskDetails();
-  }, [taskId]);
+  }, [loadTaskDetails]);
 
-  // Helper function to build comment hierarchy
   const buildCommentHierarchy = (comments: Comment[]) => {
     const commentMap: { [key: number]: Comment } = {};
     const rootComments: Comment[] = [];
@@ -93,7 +103,6 @@ const TaskDetail: React.FC = () => {
     return rootComments;
   };
 
-  // Handle adding new comments
   const handleAddComment = async () => {
     if (newComment.trim() && taskId) {
       try {
@@ -103,16 +112,16 @@ const TaskDetail: React.FC = () => {
         setNewComment('');
         setReplyToCommentId(null);
         toast.success('Comment added successfully!');
+        loadTaskDetails();
       } catch (error) {
         toast.error('Failed to add comment.');
       }
     }
   };
 
-  // Task and subtask handling
   const handleUpdateTask = async (updatedTask: Task) => {
     try {
-      await updateTask(capsuleId!, updatedTask.id, updatedTask); 
+      await updateTask(capsuleId!, updatedTask.id, updatedTask);
       setTask(updatedTask);
       toast.success('Task updated successfully!');
     } catch (error) {
@@ -154,28 +163,67 @@ const TaskDetail: React.FC = () => {
     }
   };
 
-  const handleToggleSubtaskComplete = async (subtaskId: number, completed: boolean) => {
+  const handleToggleSubtaskComplete = async (subtaskId: number, completed: boolean): Promise<boolean> => {
     try {
       const updatedSubtask =  await completeTask(subtaskId, completed);
-      setSubtasks(subtasks.map((subtask) => (subtask.id === subtaskId ? updatedSubtask : subtask)));
+      setSubtasks(subtasks.map((subtask) => (subtask.id === subtaskId ? updatedSubtask.task : subtask)));
       toast.success('Subtask updated successfully!');
+      return true;
     } catch (error) {
       toast.error('Failed to update subtask.');
+      return false;
     }
   };
 
-  // New handler for updating a subtask (required by SubtaskTab)
+  const handleToggleComplete = async (taskId: number, completed: boolean): Promise<boolean> => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      
+      if (!task) {
+        throw new Error('Task not found');
+      }
+      const response = await completeTask(taskId, completed);
+
+      if (response.success) {
+        toast.success('Task completed successfully!');
+        setTasks(tasks.map((task) => (task.id === taskId ? response.task : task)));
+        return true;
+      } else if (response.blockers && response.blockers.length > 0) {
+        const blockerMessages = response.blockers
+          .map((blocker: { title: any; status: any; }) => `${blocker.title} (Status: ${blocker.status})`)
+          .join(', ');
+  
+        const message = `Task cannot be completed because it is blocked by: ${blockerMessages}`;
+        toast.error(message);
+        return false;
+      } else if (response.subtasks && response.subtasks.length > 0) {
+        const blockerMessages = response.subtasks
+          .map((subtasks: { title: any; status: any; }) => `${subtasks.title} (Status: ${subtasks.status})`)
+          .join(', ');
+  
+        const message = `Task cannot be completed because the following subtask isn't completed: ${blockerMessages}`;
+        toast.error(message);
+        return false;
+      }
+    } catch (err) {
+      toast.error('Failed to update task completion status');
+      return false;
+    }
+    return false;
+  };
+
   const handleUpdateSubtask = async (subtaskId: number, updatedSubtask: Task) => {
     try {
-      await updateSubtask(subtaskId, updatedSubtask);
-      setSubtasks(subtasks.map((subtask) => (subtask.id === subtaskId ? updatedSubtask : subtask)));
+      const updatedSubtaskFromApi = await updateSubtask(subtaskId, updatedSubtask);
+      setSubtasks(subtasks.map((subtask) =>
+        subtask.id === subtaskId ? updatedSubtaskFromApi : subtask
+      ));
       toast.success('Subtask updated successfully!');
     } catch (error) {
       toast.error('Failed to update subtask.');
     }
   };
 
-  // Tab handling
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setActiveTab(newValue);
   };
@@ -195,6 +243,9 @@ const TaskDetail: React.FC = () => {
               users={users}
               onUpdateTask={handleUpdateTask}
               onDeleteTask={handleDeleteTask}
+              handleToggleSubtaskComplete={handleToggleSubtaskComplete}
+              handleToggleComplete={handleToggleComplete}
+              blockersDependency={tasks.map(t => ({ id: t.id, title: t.title }))}
             />
           </Card>
 
@@ -237,7 +288,7 @@ const TaskDetail: React.FC = () => {
           )}
 
           {/* Task History Tab */}
-          {activeTab === (task.parent_id ? 2 : 3) && <TaskHistoryTab history={taskHistory} users={users} />}
+          {activeTab === (task.parent_id ? 2 : 3) && <TaskHistoryTab history={taskHistory} users={users} tasks={tasks} />}
 
           <Divider sx={{ my: 4 }} />
         </>

@@ -97,9 +97,21 @@ const TaskManager: React.FC<{ users: User[] }> = ({ users }) => {
         return;
       }
       // Send request to the backend to update the completion status and completedDate
-      await completeTask(taskId, completed);
-      toast.success(`Task marked as ${completed ? 'completed' : 'not completed'}`);
-      
+      const response = await completeTask(taskId, completed);
+
+      if (response.success) {
+        toast.success('Task completed successfully!');
+      } else if (response.blockers && response.blockers.length > 0) {
+        // If the task is blocked, create a user-friendly message
+        const blockerMessages = response.blockers
+          .map((blocker: { title: any; status: any; }) => `${blocker.title} (Status: ${blocker.status})`)
+          .join(', ');
+  
+        const message = `Task cannot be completed because it is blocked by: ${blockerMessages}`;
+        
+        // Show the message to the user, e.g., using a toast
+        toast.error(message);
+      }
       // Refresh task list
       loadTasks();
     } catch (err) {

@@ -1,48 +1,64 @@
 import React, { useState } from 'react';
 import { Box, Typography, Avatar, Divider, IconButton, Collapse, Tooltip } from '@mui/material';
-import DoneIcon from '@mui/icons-material/Done';           // For task completion
-import CommentIcon from '@mui/icons-material/Comment';     // For comments
-import AttachFileIcon from '@mui/icons-material/AttachFile'; // For file uploads
-import PersonIcon from '@mui/icons-material/Person';       // For user assignment changes
+import DoneIcon from '@mui/icons-material/Done';
+import CommentIcon from '@mui/icons-material/Comment';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { TaskHistory, User } from './types';  // Assuming TaskHistory and User types exist
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import FlagIcon from '@mui/icons-material/Flag';
+import { TaskHistory, User, Task } from './types'; // Assuming Task type includes id and title
 
 interface TaskHistoryTabProps {
   history: TaskHistory[];
-  users: User[];  // List of all users to map IDs to names
+  users: User[];
+  tasks: Task[]; // Pass all tasks here to map blocker IDs to task titles
 }
 
-// Helper to find user by ID
 const findUserNameById = (userId: string, users: User[]): string => {
   const user = users.find((user) => user.id === userId);
   return user ? user.name : 'Unknown User';
 };
 
-// Generate icons for different change types
+// Function to map blocker IDs to task titles
+const mapBlockersToTitles = (blockerIds: number[], tasks: Task[]) => {
+  return blockerIds
+    .map((id) => {
+      const task = tasks.find((t) => t.id === id);
+      return task ? task.title : `Task ${id}`; // Fallback to Task ID if title is not found
+    })
+    .join(', ');
+};
+
 const getIconForChangeType = (changeType: string) => {
   switch (changeType) {
-    case 'taskCompleted':
-      return <DoneIcon color="success" />;
-    case 'newComment':
-      return <CommentIcon color="primary" />;
-    case 'fileUploaded':
-      return <AttachFileIcon color="secondary" />;
-    case 'assignedUserChanged':
-      return <PersonIcon color="action" />;
-    case 'statusChanged':
-      return <DoneIcon color="info" />;
     case 'taskCreated':
     case 'subtaskCreated':
-      return <DoneIcon color="success" />;
+      return <Tooltip title="Task Created"><AddCircleIcon color="success" /></Tooltip>;
+    case 'subtaskDeleted':
     case 'taskDeleted':
-      return <DoneIcon color="error" />;
+      return <Tooltip title="Task Deleted"><DeleteIcon color="error" /></Tooltip>;
+    case 'taskUpdated':
+    case 'subtaskUpdated':
+      return <Tooltip title="Task Updated"><EditIcon color="primary" /></Tooltip>;
+    case 'taskCompleted':
+      return <Tooltip title="Task Completed"><DoneIcon color="success" /></Tooltip>;
+    case 'assignedUserChanged':
+      return <Tooltip title="User Assignment Changed"><PeopleAltIcon color="action" /></Tooltip>;
+    case 'newComment':
+      return <Tooltip title="New Comment"><CommentIcon color="primary" /></Tooltip>;
+    case 'fileUploaded':
+      return <Tooltip title="File Uploaded"><AttachFileIcon color="secondary" /></Tooltip>;
+    case 'statusChanged':
+      return <Tooltip title="Status Changed"><FlagIcon color="info" /></Tooltip>;
     default:
-      return <DoneIcon />;
+      return <Tooltip title="Change"><EditIcon color="disabled" /></Tooltip>;
   }
 };
 
-// Handle collapsible sections for different dates
 const groupHistoryByDate = (history: TaskHistory[]) => {
   return history.reduce((acc, entry) => {
     const date = new Date(entry.timestamp).toLocaleDateString();
@@ -54,9 +70,9 @@ const groupHistoryByDate = (history: TaskHistory[]) => {
   }, {} as { [date: string]: TaskHistory[] });
 };
 
-const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users }) => {
+const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users, tasks }) => {
   const [openSections, setOpenSections] = useState<{ [date: string]: boolean }>({});
-  
+
   const toggleSection = (date: string) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -65,34 +81,48 @@ const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users }) => {
   };
 
   const parseChangeDescription = (changeType: string, changeDescription: string) => {
-    if (changeType === 'taskCreated' || changeType === 'subtaskCreated') {
-      const parsed = JSON.parse(changeDescription);
-      return (
-        <div>
-          <Typography variant="body2" color="success.main">
-            {changeType === 'subtaskCreated' ? 'SubTask' : 'Task' } Created with title: <strong>{parsed.title}</strong>, status: <strong>{parsed.status}</strong>, priority: <strong>{parsed.priority}</strong>.
-          </Typography>
-        </div>
-      );
-    }
-  
-    if (changeType === 'taskDeleted' || changeType === 'subtaskDeleted') {
-      return (
-        <div>
-          <Typography variant="body2" color="error.main">
-            Task Deleted.
-          </Typography>
-        </div>
-      );
-    }
-
     const parsed = JSON.parse(changeDescription);
 
+    // If the change is related to blockers, map blocker IDs to titles
+    if (parsed.blockers) {
+      const oldBlockers = mapBlockersToTitles(parsed.blockers.old, tasks);
+      const newBlockers = mapBlockersToTitles(parsed.blockers.new, tasks);
+
+      return (
+        <Box key="blockers">
+          <strong>Blockers:</strong>
+          <div>
+            <strong>Old:</strong> {oldBlockers || 'None'}
+          </div>
+          <div>
+            <strong>New:</strong> {newBlockers || 'None'}
+          </div>
+        </Box>
+      );
+    }
+
+    // If the description is changed, display the old and new descriptions
+    if (changeType === 'taskUpdated' && parsed.description) {
+      return (
+        <Box key="description">
+          <strong>Description:</strong>
+          <Typography variant="body2" component="div">
+            <strong>Old:</strong>
+            <div dangerouslySetInnerHTML={{ __html: parsed.description.old }} />
+          </Typography>
+          <Typography variant="body2" component="div">
+            <strong>New:</strong>
+            <div dangerouslySetInnerHTML={{ __html: parsed.description.new }} />
+          </Typography>
+        </Box>
+      );
+    }
+
+    // Handle other types of changes (assigned users, priority, etc.)
     return Object.entries(parsed).map(([field, value]: [string, any]) => {
       if (field === 'assignedUsers') {
-        // Handle user assignments using the IDs to map to names
         return (
-          <div key={field}>
+          <Box key={field}>
             <strong>Assigned Users:</strong>
             <div>
               <strong>Old:</strong>{' '}
@@ -102,19 +132,19 @@ const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users }) => {
               <strong>New:</strong>{' '}
               {value.new.map((userId: string) => findUserNameById(userId, users)).join(', ')}
             </div>
-          </div>
+          </Box>
         );
       } else if (typeof value === 'object' && value !== null) {
         return (
-          <div key={field}>
+          <Box key={field}>
             <strong>{field}:</strong> {value.old} → {value.new}
-          </div>
+          </Box>
         );
       }
       return (
-        <div key={field}>
+        <Box key={field}>
           <strong>{field}:</strong> {value}
-        </div>
+        </Box>
       );
     });
   };
@@ -129,7 +159,7 @@ const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users }) => {
           {Object.entries(groupedHistory).map(([date, events]) => (
             <Box key={date} mb={2}>
               <Box display="flex" alignItems="center">
-                <Typography variant="h6">{date}</Typography>
+                <Typography variant="h6" component="div">{date}</Typography>
                 <IconButton onClick={() => toggleSection(date)}>
                   {openSections[date] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
@@ -137,9 +167,8 @@ const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users }) => {
               <Collapse in={openSections[date]}>
                 {events.map((entry, index) => (
                   <Box key={entry.id} sx={{ display: 'flex', mb: 3 }}>
-                    {/* Display the timeline marker */}
+                    {/* Timeline marker */}
                     <Box sx={{ mr: 3, textAlign: 'center', position: 'relative' }}>
-                      {/* Dot for the timeline */}
                       <Box
                         sx={{
                           width: '10px',
@@ -149,7 +178,6 @@ const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users }) => {
                           margin: 'auto',
                         }}
                       />
-                      {/* Vertical line between dots */}
                       {index < events.length - 1 && (
                         <Box
                           sx={{
@@ -165,22 +193,25 @@ const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users }) => {
                       )}
                     </Box>
 
-                    {/* Content of the history event */}
+                    {/* History event content */}
                     <Box sx={{ flexGrow: 1 }}>
                       <Box display="flex" alignItems="center" mb={1}>
                         <Tooltip title={entry.user.name}>
-                          <Avatar src={entry.user.avatar} alt={entry.user.name} sx={{ mr: 2 }} />
+                          <Avatar
+                            src={entry.user.avatar || '/default-avatar.png'} // Fallback for missing avatars
+                            alt={entry.user.name}
+                            sx={{ mr: 2 }}
+                          />
                         </Tooltip>
-                        <Typography variant="body1">
+                        <Typography component="span" variant="body1">
                           <strong>{entry.user.name}</strong> made changes:
                         </Typography>
-                        {/* Use the icon from getIconForChangeType */}
                         {getIconForChangeType(entry.changeType)}
                       </Box>
-                      <Typography variant="body2">
+                      <Typography component="div" variant="body2">
                         {parseChangeDescription(entry.changeType, entry.changeDescription)}
                       </Typography>
-                      <Typography variant="caption" color="textSecondary">
+                      <Typography component="span" variant="caption" color="textSecondary">
                         {new Date(entry.timestamp).toLocaleString()}
                       </Typography>
                       {index < events.length - 1 && <Divider sx={{ my: 2 }} />}

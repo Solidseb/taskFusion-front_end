@@ -19,12 +19,17 @@
     "browser-image-compression": "^2.0.2",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "draft-js": "^0.11.7",
+    "draftjs-to-html": "^0.9.1",
     "formik": "^2.4.6",
+    "quill": "^2.0.2",
     "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",
     "react-big-calendar": "^1.15.0",
     "react-dom": "^18.3.1",
+    "react-draft-wysiwyg": "^1.15.0",
     "react-easy-crop": "^5.0.8",
+    "react-google-charts": "^5.1.0",
     "react-image-file-resizer": "^0.4.8",
     "react-mentions": "^4.4.10",
     "react-quill": "^2.0.0",
@@ -63,8 +68,12 @@
   },
   "devDependencies": {
     "@types/date-fns": "^2.6.0",
+    "@types/draft-js": "^0.11.18",
+    "@types/draftjs-to-html": "^0.8.4",
+    "@types/html-to-draftjs": "^1.4.3",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-big-calendar": "^1.8.12",
+    "@types/react-draft-wysiwyg": "^1.13.8",
     "@types/react-mentions": "^4.4.0"
   }
 }

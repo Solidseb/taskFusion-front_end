@@ -27,8 +27,17 @@ const AssignedUsers: React.FC<AssignedUsersProps> = ({ task, users, onUpdateTask
         ? task.assignedUsers.filter((user) => user.id !== userId)
         : [...task.assignedUsers, users.find((user) => user.id === userId)!];
 
-      onUpdateTask({ ...task, assignedUserIds: updatedAssignedUsers.map((user: { id: any }) => user.id) });
-      setUpdatedTask({ ...task, assignedUserIds: updatedAssignedUsers.map((user: { id: any }) => user.id) });
+      // Update both assignedUserIds and assignedUsers arrays
+      const updatedTask = {
+        ...task,
+        assignedUserIds: updatedAssignedUsers.map((user: { id: any }) => user.id),
+        assignedUsers: updatedAssignedUsers,
+      };
+
+      // Call onUpdateTask to propagate changes upwards
+      onUpdateTask(updatedTask);
+      // Update local task state to reflect changes in UI
+      setUpdatedTask(updatedTask);
     }
   };
 

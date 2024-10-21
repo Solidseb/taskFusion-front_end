@@ -62,6 +62,16 @@ const CommentTab: React.FC<CommentTabProps> = ({
         onChange={setNewComment}
         theme="snow"
         placeholder="Add a comment..."
+        modules={{
+          toolbar: [
+            [{ header: '1' }, { header: '2' }, { font: [] }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['bold', 'italic', 'underline', 'strike'],
+            ['link', 'image'],
+            ['clean'],
+          ],
+        }}
+        formats={['header', 'font', 'list', 'bullet', 'bold', 'italic', 'underline', 'strike', 'link', 'image']}
       />
       <Button
         variant="contained"
