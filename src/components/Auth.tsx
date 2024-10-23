@@ -57,6 +57,7 @@ const Auth: React.FC = () => {
           if (response.data.access_token) {
             localStorage.setItem('token', response.data.access_token); // Store token
             localStorage.setItem('user', JSON.stringify(response.data.user)); // Store user info
+            localStorage.setItem('settings', JSON.stringify(response.data.settings)); // Store settings
             navigate('/'); // Redirect to home page after successful login
           }
         } else if (tabIndex === 1) {

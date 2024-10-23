@@ -40,6 +40,7 @@ const TaskDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);  
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
 
   const loadTaskDetails = useCallback(async () => {
     setLoading(true);
@@ -251,14 +252,14 @@ const TaskDetail: React.FC = () => {
 
           {/* Tabs for File Attachments, Comments, and History always visible */}
           <Tabs value={activeTab} onChange={handleTabChange}>
-            {!task.parent_id && <Tab label="Subtasks" />}
+            {!task.parent_id && currentSettings.subtasksEnabled && <Tab label="Subtasks" />}
             <Tab label="File Attachments" />
             <Tab label="Comments" />
             <Tab label="History" />
           </Tabs>
 
           {/* Subtasks Tab - Only visible when task is not a subtask */}
-          {activeTab === 0 && !task.parent_id && (
+          {activeTab === 0 && !task.parent_id && currentSettings.subtasksEnabled && (
             <SubtaskTab
               taskId={task.id}
               subtasks={subtasks}

@@ -51,6 +51,8 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
     setAssignedUsers(task.assignedUsers);
   }, [task]);
 
+  const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
+
   const handleSaveEdit = () => {
     const updatedTaskWithBlockers = {
       ...updatedTask,
@@ -195,7 +197,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
 
             {/* Blockers */}
             {/* Blockers are hidden if the task is a subtask */}
-            {!task.parent_id && (
+            {!task.parent_id && currentSettings.blockersEnabled && (
               <Box>
                 <Typography variant="h6">Blockers</Typography>
                 {isEditing ? (

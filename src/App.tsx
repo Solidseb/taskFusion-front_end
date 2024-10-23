@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import TaskDetail from './components/TaskDetail';
 import TopBar from './components/TopBar';
 import Sidebar from './components/SideBar';
+import Settings from './components/Settings'; // Import Settings component
 import { CapsuleProvider } from './context/CapsuleContext'; // Import CapsuleProvider
 
 import './App.css';
@@ -42,6 +43,7 @@ const App = () => {
                         <Route path="/capsules/:id" element={<PrivateRoute><CapsuleDetail /></PrivateRoute>} />
                         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
                         <Route path="/tasks/:taskId" element={<PrivateRoute><TaskDetail /></PrivateRoute>} />
+                        <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
                       </Routes>
                     </div>
                   </div>
