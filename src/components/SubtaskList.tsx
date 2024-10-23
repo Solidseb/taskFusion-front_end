@@ -119,15 +119,19 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                   <TableCell>
                     {subtask.dueDate ? (
                       <>
-                        {new Date(subtask.dueDate).toLocaleDateString()}
-                        {new Date() > new Date(subtask.dueDate) && subtask.status !== 'Completed' && (
-                          <span style={{ color: 'red' }}> (Overdue)</span>
+                        {/* Add one day to the subtask due date */}
+                        {new Date(new Date(subtask.dueDate).setDate(new Date(subtask.dueDate).getDate() + 1)).toLocaleDateString()}
+                        {/* Check if the (adjusted) due date is overdue */}
+                        {new Date() > new Date(new Date(subtask.dueDate).setDate(new Date(subtask.dueDate).getDate() + 1)) &&
+                          subtask.status !== 'Completed' && (
+                            <span style={{ color: 'red' }}> (Overdue)</span>
                         )}
                       </>
                     ) : (
                       'No due date'
                     )}
                   </TableCell>
+
 
                   <TableCell>
                     {subtask.completedDate

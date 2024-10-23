@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';  // For navigation
 import './Dashboard.css';  // Dashboard-specific styles for the grid layout
 import { User } from "./types";
 
+const token = localStorage.getItem('token');
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 interface Capsule {
@@ -37,7 +38,11 @@ const Dashboard: React.FC = () => {
   const fetchCapsules = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/capsules`);
+      const response = await axios.get(`${API_URL}/capsules`,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setCapsules(response.data);
     } catch (error) {
       console.error('Error fetching capsules:', error);
@@ -71,11 +76,19 @@ const Dashboard: React.FC = () => {
     try {
       if (editCapsule) {
         // Update capsule
-        await axios.put(`${API_URL}/capsules/${editCapsule.id}`, data);
+        await axios.put(`${API_URL}/capsules/${editCapsule.id}`, data,{
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         toast.success('Capsule updated successfully!');
       } else {
         // Create new capsule
-        await axios.post(`${API_URL}/capsules`, data);
+        await axios.post(`${API_URL}/capsules`, data,{
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         toast.success('Capsule created successfully!');
       }
       fetchCapsules(); // Refresh capsules after creation or update
@@ -90,7 +103,11 @@ const Dashboard: React.FC = () => {
   const handleDeleteCapsule = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this capsule?')) {
       try {
-        await axios.delete(`${API_URL}/capsules/${id}`);
+        await axios.delete(`${API_URL}/capsules/${id}`,{
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         fetchCapsules(); // Refresh capsules after deletion
         toast.success('Capsule deleted successfully!');
       } catch (error) {

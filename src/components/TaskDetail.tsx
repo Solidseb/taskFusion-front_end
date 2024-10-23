@@ -140,7 +140,7 @@ const TaskDetail: React.FC = () => {
 
   const handleAddSubtask = async (subtaskData: any) => {
     try {
-      await createSubtask(task!.id, capsuleId!, subtaskData.title); 
+      await createSubtask(task!.id, capsuleId!, subtaskData); 
       const updatedSubtasks = await fetchSubtasks(task!.id);
       setSubtasks(updatedSubtasks);
       toast.success('Subtask added successfully!');

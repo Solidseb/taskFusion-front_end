@@ -62,15 +62,19 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                 <TableCell>
                   {task.dueDate ? (
                     <>
-                      {dayjs(task.dueDate).format('MMMM D, YYYY')}
-                      {dayjs().isAfter(task.dueDate) && task.status !== 'Completed' && (
-                        <span style={{ color: 'red' }}> (Overdue)</span>
+                      {/* Add one day to the subtask due date */}
+                      {new Date(new Date(task.dueDate).setDate(new Date(task.dueDate).getDate() + 1)).toLocaleDateString()}
+                      {/* Check if the (adjusted) due date is overdue */}
+                      {new Date() > new Date(new Date(task.dueDate).setDate(new Date(task.dueDate).getDate() + 1)) &&
+                        task.status !== 'Completed' && (
+                          <span style={{ color: 'red' }}> (Overdue)</span>
                       )}
                     </>
                   ) : (
                     'No due date'
                   )}
                 </TableCell>
+
 
                 <TableCell>{task.completedDate ? dayjs(task.completedDate).format('MMMM D, YYYY') : 'Not completed'}</TableCell>
                 <TableCell>{task.status}</TableCell>

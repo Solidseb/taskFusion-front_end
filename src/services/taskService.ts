@@ -1,5 +1,6 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
+import { Task } from '../components/types';
 
 const API_URL = 'http://localhost:3000/tasks';
 
@@ -66,8 +67,8 @@ export const fetchSubtasks = async (parentId: number) => {
 };
 
 // Create a new subtask (with blockers)
-export const createSubtask = async (parent_id: number, capsuleId: number, title: string) => {
-  const response = await axios.post(API_URL, { title, capsuleId, parent_id }, {
+export const createSubtask = async (parent_id: number, capsuleId: number, subtask: Task) => {
+  const response = await axios.post(API_URL, { capsuleId, parent_id, ...subtask}, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
