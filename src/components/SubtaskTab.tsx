@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@mui/material';
 import SubtaskList from './SubtaskList';
 import TaskModal from './TaskModal';
-import { Task, User } from './types';
+import { Tag, Task, User } from './types';
 
 interface SubtaskTabProps {
   taskId: number;
@@ -13,6 +13,7 @@ interface SubtaskTabProps {
   onAddSubtask: (taskData: any) => Promise<void>;
   onUpdateSubtask: (taskId: number, updatedSubtask: Task) => Promise<void>; // New prop for updating a subtask
   users: User[];
+  tags: Tag[];
 }
 
 const SubtaskTab: React.FC<SubtaskTabProps> = ({
@@ -23,6 +24,7 @@ const SubtaskTab: React.FC<SubtaskTabProps> = ({
   onAddSubtask,
   onUpdateSubtask, // Use this for updating an edited subtask
   users,
+  tags,
 }) => {
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [subtaskForEditing, setSubtaskForEditing] = useState<Task | null>(null);
@@ -71,6 +73,7 @@ const SubtaskTab: React.FC<SubtaskTabProps> = ({
         onClose={() => setTaskModalOpen(false)}
         onSave={handleSaveTaskOrSubtask}
         users={users}
+        tags={tags}
         initialTaskData={subtaskForEditing || undefined} // Preload data if editing
       />
     </>

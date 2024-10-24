@@ -22,8 +22,11 @@ import SubtaskTab from './SubtaskTab';
 import CommentTab from './CommentTab';
 import FileAttachmentTab from './FileAttachmentTab';
 import TaskHistoryTab from './TaskHistoryTab'; 
-import { User, Task, Comment, TaskHistory } from './types';
+import { User, Task, Comment, TaskHistory, Tag } from './types';
 import { useCapsule } from '../context/CapsuleContext';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 const TaskDetail: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
@@ -38,6 +41,7 @@ const TaskDetail: React.FC = () => {
   const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState(0);  
+  const [tags, setTags] = useState<Tag[]>([]);
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
@@ -84,6 +88,20 @@ const TaskDetail: React.FC = () => {
     loadTaskDetails();
   }, [loadTaskDetails]);
 
+  const organizationId = JSON.parse(localStorage.getItem('user') || '{}').organizationId;
+
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const tagsResponse = await axios.get(`${API_URL}/tags/${organizationId}`);
+        setTags(tagsResponse.data || []);
+      } catch (error) {
+        console.error('Failed to fetch settings or tags', error);
+      }
+    };
+    fetchTags();
+  }, [organizationId]);
+  
   const buildCommentHierarchy = (comments: Comment[]) => {
     const commentMap: { [key: number]: Comment } = {};
     const rootComments: Comment[] = [];
@@ -247,6 +265,7 @@ const TaskDetail: React.FC = () => {
               handleToggleSubtaskComplete={handleToggleSubtaskComplete}
               handleToggleComplete={handleToggleComplete}
               blockersDependency={tasks.map(t => ({ id: t.id, title: t.title }))}
+              tags={tags}
             />
           </Card>
 
@@ -264,6 +283,7 @@ const TaskDetail: React.FC = () => {
               taskId={task.id}
               subtasks={subtasks}
               users={users}
+              tags={tags}
               onDeleteSubtask={handleDeleteSubtask}
               onToggleSubtaskComplete={handleToggleSubtaskComplete}
               onEditSubtask={handleEditSubtask}

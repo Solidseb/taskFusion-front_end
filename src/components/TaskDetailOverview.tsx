@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, TextField, MenuItem, Chip, Avatar, Stack, Grid, IconButton, Menu } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  MenuItem,
+  Chip,
+  Avatar,
+  Stack,
+  Grid,
+  IconButton,
+  Menu,
+} from '@mui/material';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Task, User } from '../components/types';
+import { Task, User, Tag } from '../components/types';
 import TaskStatusSelector from './TaskStatusSelector';
 import TaskPrioritySelector from './TaskPrioritySelector';
 import dayjs from 'dayjs';
@@ -19,45 +31,44 @@ interface TaskDetailProps {
   task: Task;
   users: User[];
   blockersDependency: Blocker[];
+  tags: Tag[];
   onUpdateTask: (updatedTask: Task) => void;
   onDeleteTask: (taskId: number) => void;
   handleToggleComplete: (taskId: number, completed: boolean) => Promise<boolean>;
   handleToggleSubtaskComplete?: (subtaskId: number, completed: boolean) => Promise<boolean>;
 }
 
-const getBlockerIds = (blockers: (number | { id: number })[]) => {
-  return blockers.map((blocker) => (typeof blocker === 'object' ? blocker.id : blocker));
-};
-
 const TaskDetailOverview: React.FC<TaskDetailProps> = ({
   task,
   users,
   blockersDependency,
+  tags,
   onUpdateTask,
   onDeleteTask,
   handleToggleComplete,
   handleToggleSubtaskComplete,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [assignAnchorEl, setAssignAnchorEl] = useState<null | HTMLElement>(null);
   const [updatedTask, setUpdatedTask] = useState<Task>(task);
-  const [blockers, setBlockers] = useState<number[]>(getBlockerIds(task.blockers));
+  const [blockers, setBlockers] = useState<number[]>(task.blockers);
   const [assignedUsers, setAssignedUsers] = useState<User[]>(task.assignedUsers);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>(task.tagIds || []);
+  const [assignAnchorEl, setAssignAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     setUpdatedTask(task);
-    setBlockers(getBlockerIds(task.blockers));
+    setBlockers(task.blockers);
     setAssignedUsers(task.assignedUsers);
+    setSelectedTags(task.tags || []);
   }, [task]);
-
-  const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
 
   const handleSaveEdit = () => {
     const updatedTaskWithBlockers = {
       ...updatedTask,
-      blockers: getBlockerIds(blockers),
+      blockers,
       assignedUsers,
+      tags: selectedTags,
     };
     onUpdateTask(updatedTaskWithBlockers);
     setIsEditing(false);
@@ -66,7 +77,8 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
   const handleCancelEdit = () => {
     setIsEditing(false);
     setUpdatedTask(task);
-    setBlockers(getBlockerIds(task.blockers));
+    setBlockers(task.blockers);
+    setSelectedTags(task.tagIds || []);
   };
 
   const handleAssignClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -83,6 +95,12 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
       setAssignedUsers(updatedAssignedUsers);
       setUpdatedTask({ ...updatedTask, assignedUsers: updatedAssignedUsers });
     }
+  };
+
+  const handleTagChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const tagIds = event.target.value as string[];
+    const newTags = tags.filter((tag) => tagIds.includes(tag.id));
+    setSelectedTags(newTags);
   };
 
   const handleNavigateToTask = (blockerId: number) => {
@@ -127,7 +145,11 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
                   formats={['header', 'font', 'list', 'bullet', 'bold', 'italic', 'underline', 'strike', 'link', 'image']}
                 />
               ) : (
-                <Typography variant="body1" color="textSecondary" sx={{ marginTop: 1, marginBottom: 3 }}>
+                <Typography
+                  variant="body1"
+                  color="textSecondary"
+                  sx={{ marginTop: 1, marginBottom: 3 }}
+                >
                   <div dangerouslySetInnerHTML={{ __html: task.description }} />
                 </Typography>
               )}
@@ -135,7 +157,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
           </Box>
         </Grid>
 
-        {/* Status, Priority, Assigned Users, and Blockers */}
+        {/* Status, Priority, Assigned Users, Blockers, and Tag */}
         <Grid item xs={12} md={4}>
           <Box display="flex" flexDirection="column" gap={2} sx={{ textAlign: 'right' }}>
             {/* Status */}
@@ -196,8 +218,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
             </Box>
 
             {/* Blockers */}
-            {/* Blockers are hidden if the task is a subtask */}
-            {!task.parent_id && currentSettings.blockersEnabled && (
+            {!task.parent_id && (
               <Box>
                 <Typography variant="h6">Blockers</Typography>
                 {isEditing ? (
@@ -205,40 +226,80 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
                     select
                     label="Blockers"
                     value={blockers}
-                    onChange={(e) => setBlockers((e.target.value as unknown as number[]))}
+                    onChange={(e) => setBlockers(e.target.value as unknown as number[])}
                     SelectProps={{
                       multiple: true,
                     }}
                     variant="outlined"
                     sx={{ width: '200px' }}
                   >
-                    {blockersDependency.map((blocker) => (
-                      <MenuItem key={blocker.id} value={blocker.id}>
-                        {blocker.title}
-                      </MenuItem>
-                    ))}
+                    {blockersDependency
+                      .filter((blocker) => blocker.id !== task.id) // Filter out current task from blockers
+                      .map((blocker) => (
+                        <MenuItem key={blocker.id} value={blocker.id}>
+                          {blocker.title}
+                        </MenuItem>
+                      ))}
                   </TextField>
                 ) : (
                   <Box>
                     {blockers.length > 0 ? (
                       <Stack spacing={1} direction="row" justifyContent="flex-end">
-                        {blockers.map((blockerId) => {
-                          const blocker = blockersDependency.find((b) => b.id === blockerId);
-                          return blocker ? (
-                            <Chip
-                              key={blocker.id}
-                              label={blocker.title}
-                              size="small"
-                              onClick={() => handleNavigateToTask(blocker.id)}
-                              clickable
-                            />
-                          ) : null;
-                        })}
+                        {blockers
+                          .filter((blockerId) => blockerId !== task.id) // Filter out current task from blockers
+                          .map((blockerId) => {
+                            const blocker = blockersDependency.find((b) => b.id === blockerId);
+                            return blocker ? (
+                              <Chip
+                                key={blocker.id}
+                                label={blocker.title}
+                                size="small"
+                                onClick={() => handleNavigateToTask(blocker.id)}
+                                clickable
+                              />
+                            ) : null;
+                          })}
                       </Stack>
                     ) : (
                       <Typography>No blockers assigned</Typography>
                     )}
                   </Box>
+                )}
+              </Box>
+            )}
+
+            {/* Tag Selector */}
+            {isEditing && (
+              <Box>
+                <Typography variant="h6">Tag</Typography>
+                <TextField
+                  select
+                  label="Select Tag"
+                  value={selectedTags.map((tag) => tag.id)}
+                  onChange={handleTagChange}
+                  variant="outlined"
+                  SelectProps={{ multiple: true }}
+                  sx={{ width: '200px' }}
+                >
+                  {tags.map((tag) => (
+                    <MenuItem key={tag.id} value={tag.id}>
+                      {tag.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+            )}
+            {!isEditing && (
+              <Box>
+                <Typography variant="h6">Tags</Typography>
+                {selectedTags.length > 0 ? (
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    {selectedTags.map((tag) => (
+                      <Chip key={tag.id} label={tag.name} size="small" />
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography>No tags selected</Typography>
                 )}
               </Box>
             )}
@@ -270,8 +331,12 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
           </Box>
         ) : (
           <Box>
-            <Typography>Start Date: {task.startDate ? dayjs(task.startDate).format('MMMM D, YYYY') : 'N/A'}</Typography>
-            <Typography>Due Date: {task.dueDate ? dayjs(task.dueDate).format('MMMM D, YYYY') : 'N/A'}</Typography>
+            <Typography>
+              Start Date: {task.startDate ? dayjs(task.startDate).format('MMMM D, YYYY') : 'N/A'}
+            </Typography>
+            <Typography>
+              Due Date: {task.dueDate ? dayjs(task.dueDate).format('MMMM D, YYYY') : 'N/A'}
+            </Typography>
           </Box>
         )}
       </Box>

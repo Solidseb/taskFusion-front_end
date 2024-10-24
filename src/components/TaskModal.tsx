@@ -9,16 +9,25 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
+import { Tag } from '../components/types'; // Import Tag type
 
 interface TaskModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (taskData: any) => void;
-  users: { id: string, name: string }[];
+  users: { id: string; name: string }[];
+  tags: Tag[]; // Add tags prop
   initialTaskData?: any;
 }
 
-const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, initialTaskData }) => {
+const TaskModal: React.FC<TaskModalProps> = ({
+  open,
+  onClose,
+  onSave,
+  users,
+  tags,
+  initialTaskData,
+}) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -26,6 +35,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
   const [status, setStatus] = useState('To Do');
   const [priority, setPriority] = useState('Medium');
   const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]); // Track selected tag IDs as string[].
 
   useEffect(() => {
     if (initialTaskData) {
@@ -35,12 +45,17 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
       setDueDate(initialTaskData.dueDate || '');
       setStatus(initialTaskData.status || 'To Do');
       setPriority(initialTaskData.priority || 'Medium');
-      
-      // Extract user IDs from initialTaskData.assignedUsers
+
+      // Extract user IDs and tag IDs from initialTaskData
       const userIds = initialTaskData.assignedUsers
         ? initialTaskData.assignedUsers.map((user: any) => user.id)
         : [];
       setAssignedUserIds(userIds);
+
+      const tagIds = initialTaskData.tags
+        ? initialTaskData.tags.map((tag: any) => tag.id)
+        : [];
+      setSelectedTagIds(tagIds); // Store tag IDs as string[].
     } else {
       resetForm();
     }
@@ -54,9 +69,16 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
     setStatus('To Do');
     setPriority('Medium');
     setAssignedUserIds([]);
+    setSelectedTagIds([]); // Reset tag IDs
   };
 
   const handleSave = () => {
+    // Save full tag objects (id and name) by mapping selectedTagIds to tag objects
+    const selectedTags = selectedTagIds.map((id) => {
+      const tag = tags.find((tag) => tag.id === id);
+      return { id: tag?.id, name: tag?.name };
+    });
+
     const taskData = {
       title,
       description,
@@ -65,7 +87,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
       status,
       priority,
       assignedUserIds,
+      tags: selectedTags, // Store the full tag objects (id and name)
     };
+
     onSave(taskData);
     resetForm();
     onClose();
@@ -73,7 +97,15 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
 
   return (
     <Modal open={open} onClose={onClose}>
-      <Box sx={{ width: 400, p: 3, bgcolor: 'background.paper', margin: 'auto', mt: '20vh' }}>
+      <Box
+        sx={{
+          width: 400,
+          p: 3,
+          bgcolor: 'background.paper',
+          margin: 'auto',
+          mt: '20vh',
+        }}
+      >
         <TextField
           label="Title"
           value={title}
@@ -132,7 +164,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
             value={assignedUserIds}
             onChange={(e) => setAssignedUserIds(e.target.value as string[])}
             renderValue={(selected) =>
-              selected.map((id) => users.find((user) => user.id === id)?.name).join(', ')
+              selected
+                .map((id) => users.find((user) => user.id === id)?.name)
+                .join(', ')
             }
           >
             {users.map((user) => (
@@ -142,8 +176,34 @@ const TaskModal: React.FC<TaskModalProps> = ({ open, onClose, onSave, users, ini
             ))}
           </Select>
         </FormControl>
+
+        {/* Tags Section */}
+        <FormControl margin="normal" fullWidth>
+          <InputLabel>Tags</InputLabel>
+          <Select
+            multiple
+            value={selectedTagIds} // Ensure this is treated as an array of tag IDs (string[]).
+            onChange={(e) => setSelectedTagIds(e.target.value as string[])}
+            renderValue={(selected) =>
+              selected
+                .map((id) => tags.find((tag) => tag.id === id)?.name)
+                .join(', ')
+            }
+          >
+            {tags.map((tag) => (
+              <MenuItem key={tag.id} value={tag.id}>
+                {tag.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <Box mt={2}>
-          <Button variant="contained" onClick={handleSave} disabled={!title.trim()}>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={!title.trim()}
+          >
             Save
           </Button>
         </Box>

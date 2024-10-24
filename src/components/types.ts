@@ -18,6 +18,8 @@ export interface User {
     parent_id?: number;
     subtasks?: Task[];
     blockers: number[];
+    tagIds?: Tag[];
+    tags?: Tag[];
   }
   
  export  interface Comment {

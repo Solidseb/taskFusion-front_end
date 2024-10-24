@@ -2,11 +2,11 @@ import React, { useEffect, useState, useCallback } from "react";
 import TaskList from "./TaskList";
 import TaskModal from "./TaskModal";
 import { fetchTasksByCapsule, createTask, updateTask, deleteTask, completeTask } from "../services/taskService";
-import { Task, User } from "./types";
+import { Tag, Task, User } from "./types";
 import { toast } from "react-toastify";
 import { useCapsule } from '../context/CapsuleContext'; // Use CapsuleContext
 
-const TaskManager: React.FC<{ users: User[] }> = ({ users }) => {
+const TaskManager: React.FC<{ users: User[], tags: Tag[] }> = ({ users, tags }) => {
   const { capsuleId } = useCapsule(); // Get capsuleId from context
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -134,6 +134,7 @@ const TaskManager: React.FC<{ users: User[] }> = ({ users }) => {
         onClose={() => setTaskModalOpen(false)}
         onSave={handleSaveTask}
         users={users}
+        tags={tags}
         initialTaskData={taskForEditing}
       />
     </>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Avatar, IconButton, Tooltip } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Avatar, IconButton, Tooltip, Chip, Stack } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Task, User } from './types';
 import { Link } from 'react-router-dom';
@@ -21,12 +21,13 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
           <TableRow>
             <TableCell>Task Name</TableCell>
             <TableCell>Assigned To</TableCell>
-            <TableCell>Subtasks</TableCell> {/* New column for subtask count */}
+            <TableCell>Subtasks</TableCell>
             <TableCell>Start Date</TableCell>
             <TableCell>Due Date</TableCell>
             <TableCell>Completed Date</TableCell>
             <TableCell>Status</TableCell>
             <TableCell>Priority</TableCell>
+            <TableCell>Tags</TableCell> {/* New column for tags */}
             <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
@@ -40,6 +41,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                   </Link>
                 </TableCell>
 
+                {/* Assigned Users */}
                 <TableCell>
                   {task.assignedUsers && task.assignedUsers.length > 0 ? (
                     task.assignedUsers.map((user) => (
@@ -55,16 +57,16 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                 </TableCell>
 
                 {/* Subtask Count */}
-                <TableCell>{task.subtasks ? task.subtasks.length : 0}</TableCell> {/* New subtask count */}
+                <TableCell>{task.subtasks ? task.subtasks.length : 0}</TableCell>
 
+                {/* Start Date */}
                 <TableCell>{task.startDate ? dayjs(task.startDate).format('MMMM D, YYYY') : 'No start date'}</TableCell>
 
+                {/* Due Date */}
                 <TableCell>
                   {task.dueDate ? (
                     <>
-                      {/* Add one day to the subtask due date */}
                       {new Date(new Date(task.dueDate).setDate(new Date(task.dueDate).getDate() + 1)).toLocaleDateString()}
-                      {/* Check if the (adjusted) due date is overdue */}
                       {new Date() > new Date(new Date(task.dueDate).setDate(new Date(task.dueDate).getDate() + 1)) &&
                         task.status !== 'Completed' && (
                           <span style={{ color: 'red' }}> (Overdue)</span>
@@ -75,11 +77,25 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                   )}
                 </TableCell>
 
-
+                {/* Completed Date */}
                 <TableCell>{task.completedDate ? dayjs(task.completedDate).format('MMMM D, YYYY') : 'Not completed'}</TableCell>
+
+                {/* Status */}
                 <TableCell>{task.status}</TableCell>
+
+                {/* Priority */}
                 <TableCell>{task.priority}</TableCell>
 
+                {/* Display Tags */}
+                <TableCell>
+                  <Stack direction="row" spacing={1}>
+                    {task.tags?.map((tag) => (
+                      <Chip key={tag.id} label={tag.name} size="small" />
+                    ))}
+                  </Stack>
+                </TableCell>
+
+                {/* Actions */}
                 <TableCell>
                   <Checkbox
                     checked={task.status === 'Completed'}
@@ -97,7 +113,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={8}>No tasks found</TableCell>
+              <TableCell colSpan={10}>No tasks found</TableCell>
             </TableRow>
           )}
         </TableBody>
