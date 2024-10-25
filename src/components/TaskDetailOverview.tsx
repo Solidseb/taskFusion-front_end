@@ -50,7 +50,11 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedTask, setUpdatedTask] = useState<Task>(task);
-  const [blockers, setBlockers] = useState<number[]>(task.blockers);
+  const [blockers, setBlockers] = useState<number[]>(
+    task.blockers.map((blocker: Task | number) =>
+      typeof blocker === 'object' && 'id' in blocker ? blocker.id : blocker
+    )
+  );
   const [assignedUsers, setAssignedUsers] = useState<User[]>(task.assignedUsers);
   const [selectedTags, setSelectedTags] = useState<Tag[]>(task.tagIds || []);
   const [assignAnchorEl, setAssignAnchorEl] = useState<null | HTMLElement>(null);
@@ -58,7 +62,11 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
 
   useEffect(() => {
     setUpdatedTask(task);
-    setBlockers(task.blockers);
+    setBlockers(
+      task.blockers.map((blocker: Task | number) =>
+        typeof blocker === 'object' && 'id' in blocker ? blocker.id : blocker
+      )
+    );
     setAssignedUsers(task.assignedUsers);
     setSelectedTags(task.tags || []);
   }, [task]);
@@ -77,7 +85,11 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
   const handleCancelEdit = () => {
     setIsEditing(false);
     setUpdatedTask(task);
-    setBlockers(task.blockers);
+    setBlockers(
+      task.blockers.map((blocker: Task | number) =>
+        typeof blocker === 'object' && 'id' in blocker ? blocker.id : blocker
+      )
+    );
     setSelectedTags(task.tagIds || []);
   };
 
