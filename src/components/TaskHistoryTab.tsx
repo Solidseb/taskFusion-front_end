@@ -10,12 +10,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import FlagIcon from '@mui/icons-material/Flag';
-import { TaskHistory, User, Task } from './types'; // Assuming Task type includes id and title
+import { TaskHistory, User, Task, Tag} from './types'; // Assuming Task type includes id and title
 
 interface TaskHistoryTabProps {
   history: TaskHistory[];
   users: User[];
   tasks: Task[]; // Pass all tasks here to map blocker IDs to task titles
+  tags: Tag[];
 }
 
 const findUserNameById = (userId: string, users: User[]): string => {
@@ -70,7 +71,7 @@ const groupHistoryByDate = (history: TaskHistory[]) => {
   }, {} as { [date: string]: TaskHistory[] });
 };
 
-const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users, tasks }) => {
+const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users, tasks, tags }) => {
   const [openSections, setOpenSections] = useState<{ [date: string]: boolean }>({});
 
   const toggleSection = (date: string) => {
@@ -82,72 +83,141 @@ const TaskHistoryTab: React.FC<TaskHistoryTabProps> = ({ history, users, tasks }
 
   const parseChangeDescription = (changeType: string, changeDescription: string) => {
     const parsed = JSON.parse(changeDescription);
-
-    // If the change is related to blockers, map blocker IDs to titles
-    if (parsed.blockers) {
-      const oldBlockers = mapBlockersToTitles(parsed.blockers.old, tasks);
-      const newBlockers = mapBlockersToTitles(parsed.blockers.new, tasks);
-
-      return (
-        <Box key="blockers">
-          <strong>Blockers:</strong>
-          <div>
-            <strong>Old:</strong> {oldBlockers || 'None'}
-          </div>
-          <div>
-            <strong>New:</strong> {newBlockers || 'None'}
-          </div>
-        </Box>
-      );
-    }
-
-    // If the description is changed, display the old and new descriptions
-    if (changeType === 'taskUpdated' && parsed.description) {
-      return (
-        <Box key="description">
-          <strong>Description:</strong>
-          <Typography variant="body2" component="div">
-            <strong>Old:</strong>
-            <div dangerouslySetInnerHTML={{ __html: parsed.description.old }} />
-          </Typography>
-          <Typography variant="body2" component="div">
-            <strong>New:</strong>
-            <div dangerouslySetInnerHTML={{ __html: parsed.description.new }} />
-          </Typography>
-        </Box>
-      );
-    }
-
-    // Handle other types of changes (assigned users, priority, etc.)
-    return Object.entries(parsed).map(([field, value]: [string, any]) => {
-      if (field === 'assignedUsers') {
+  
+    // Helper function to map tag IDs to tag names
+    const mapTagIdsToNames = (tagIds: string[] = []) => {
+      if (tagIds.length === 0) return 'None';
+      return tagIds
+        .map((tagId) => {
+          const tag = tags.find((t) => t.id === tagId);
+          return tag ? tag.name : `Unknown Tag (${tagId})`;
+        })
+        .join(', ');
+    };
+  
+    // Display based on changeType
+    switch (changeType) {
+      case 'taskCreated':
         return (
-          <Box key={field}>
-            <strong>Assigned Users:</strong>
+          <Box key="taskCreated">
+            <strong>Task Created:</strong>
             <div>
-              <strong>Old:</strong>{' '}
-              {value.old.map((userId: string) => findUserNameById(userId, users)).join(', ')}
+              <strong>Title:</strong> {parsed.title || 'Untitled'}
             </div>
             <div>
-              <strong>New:</strong>{' '}
-              {value.new.map((userId: string) => findUserNameById(userId, users)).join(', ')}
+              <strong>Description:</strong> {parsed.description ? <div dangerouslySetInnerHTML={{ __html: parsed.description }} /> : 'No description'}
+            </div>
+            <div>
+              <strong>Tags:</strong> {mapTagIdsToNames(parsed.tags || [])}
+            </div>
+            <div>
+              <strong>Status:</strong> {parsed.status || 'No status'}
+            </div>
+            <div>
+              <strong>Priority:</strong> {parsed.priority || 'No priority'}
             </div>
           </Box>
         );
-      } else if (typeof value === 'object' && value !== null) {
+  
+      case 'taskUpdated':
+        // Handle updates for specific fields such as tags, assigned users, blockers, description, etc.
+        if (parsed.tags) {
+          const oldTags = mapTagIdsToNames(parsed.tags.old || []);
+          const newTags = mapTagIdsToNames(parsed.tags.new || []);
+          return (
+            <Box key="tags">
+              <strong>Tags Updated:</strong>
+              <div>
+                <strong>Old:</strong> {oldTags}
+              </div>
+              <div>
+                <strong>New:</strong> {newTags}
+              </div>
+            </Box>
+          );
+        }
+        if (parsed.assignedUsers) {
+          const oldUsers = (parsed.assignedUsers.old || [])
+            .map((userId: string) => findUserNameById(userId, users))
+            .join(', ') || 'None';
+          const newUsers = (parsed.assignedUsers.new || [])
+            .map((userId: string) => findUserNameById(userId, users))
+            .join(', ') || 'None';
+          return (
+            <Box key="assignedUsers">
+              <strong>Assigned Users Updated:</strong>
+              <div>
+                <strong>Old:</strong> {oldUsers}
+              </div>
+              <div>
+                <strong>New:</strong> {newUsers}
+              </div>
+            </Box>
+          );
+        }
+        if (parsed.blockers) {
+          const oldBlockers = mapBlockersToTitles(parsed.blockers.old || [], tasks) || 'None';
+          const newBlockers = mapBlockersToTitles(parsed.blockers.new || [], tasks) || 'None';
+          return (
+            <Box key="blockers">
+              <strong>Blockers Updated:</strong>
+              <div>
+                <strong>Old:</strong> {oldBlockers}
+              </div>
+              <div>
+                <strong>New:</strong> {newBlockers}
+              </div>
+            </Box>
+          );
+        }
+        if (parsed.description) {
+          return (
+            <Box key="description">
+              <strong>Description Updated:</strong>
+              <Typography variant="body2" component="div">
+                <strong>Old:</strong>
+                <div dangerouslySetInnerHTML={{ __html: parsed.description.old || '' }} />
+              </Typography>
+              <Typography variant="body2" component="div">
+                <strong>New:</strong>
+                <div dangerouslySetInnerHTML={{ __html: parsed.description.new || '' }} />
+              </Typography>
+            </Box>
+          );
+        }
+        break;
+  
+      case 'taskDeleted':
         return (
-          <Box key={field}>
-            <strong>{field}:</strong> {value.old} → {value.new}
+          <Box key="taskDeleted">
+            <strong>Task Deleted</strong>
+            <div>
+              <strong>Title:</strong> {parsed.title || 'Unknown Title'}
+            </div>
+            <div>
+              <strong>Status:</strong> {parsed.status || 'Unknown Status'}
+            </div>
           </Box>
         );
-      }
-      return (
-        <Box key={field}>
-          <strong>{field}:</strong> {value}
-        </Box>
-      );
-    });
-  };
+  
+      default:
+        // Handle other types of changes or unrecognized fields
+        return Object.entries(parsed).map(([field, value]: [string, any]) => {
+          if (typeof value === 'object' && value !== null) {
+            return (
+              <Box key={field}>
+                <strong>{field}:</strong> {JSON.stringify(value)} {/* Fallback for complex objects */}
+              </Box>
+            );
+          }
+          return (
+            <Box key={field}>
+              <strong>{field}:</strong> {String(value)}
+            </Box>
+          );
+        });
+    }
+  };  
 
   const groupedHistory = groupHistoryByDate(history);
 

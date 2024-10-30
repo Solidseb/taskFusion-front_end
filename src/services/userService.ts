@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -6,7 +6,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 export const fetchUserInfo = async () => {
   const token = localStorage.getItem('token');
   try {
-    const response = await axios.get(`${API_URL}/users/info`, {
+    const response = await api.get(`${API_URL}/users/info`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -21,7 +21,7 @@ export const fetchUserInfo = async () => {
 // Update user info (name, email, password)
 export const updateUserInfo = async (token: string, userData: any) => {
   try {
-    const response = await axios.put(
+    const response = await api.put(
       `${API_URL}/users/info`,
       { ...userData },
       {
@@ -40,7 +40,7 @@ export const updateUserInfo = async (token: string, userData: any) => {
 export const fetchUsers = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get(`${API_URL}/users`, {
+      const response = await api.get(`${API_URL}/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

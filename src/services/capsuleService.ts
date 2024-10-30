@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 
 const API_URL = 'http://localhost:3000/capsules'; 
 
@@ -22,7 +22,7 @@ interface UpdateTaskData {
   
 // Fetch all capsules
 export const fetchCapsules = async () => {
-  const response = await axios.get(`${API_URL}`,{
+  const response = await api.get(`${API_URL}`,{
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -32,7 +32,7 @@ export const fetchCapsules = async () => {
 
 // Create a new capsule
 export const createCapsule = async (capsule: { title: string; description: string }) => {
-  const response = await axios.post(`${API_URL}`, capsule,{
+  const response = await api.post(`${API_URL}`, capsule,{
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -42,7 +42,7 @@ export const createCapsule = async (capsule: { title: string; description: strin
 
 // Update an existing capsule
 export const updateCapsule = async (id: number, capsule: { title: string; description: string }) => {
-  const response = await axios.put(`${API_URL}/${id}`, capsule,{
+  const response = await api.put(`${API_URL}/${id}`, capsule,{
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -52,7 +52,7 @@ export const updateCapsule = async (id: number, capsule: { title: string; descri
 
 // Fetch details of a specific capsule
 export const fetchCapsuleDetails = async (id: number) => {
-  const response = await axios.get(`${API_URL}/${id}`,{
+  const response = await api.get(`${API_URL}/${id}`,{
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -62,7 +62,7 @@ export const fetchCapsuleDetails = async (id: number) => {
 
 // Fetch tasks associated with a specific capsule
 export const fetchTasksByCapsule = async (capsuleId: number) => {
-    const response = await axios.get(`${API_URL}/${capsuleId}/tasks`,{
+    const response = await api.get(`${API_URL}/${capsuleId}/tasks`,{
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -72,7 +72,7 @@ export const fetchTasksByCapsule = async (capsuleId: number) => {
 
 export const createTask = async (capsuleId: number, data: CreateTaskData) => {
     console.log(data)
-    const response = await axios.post(`${API_URL}/${capsuleId}/tasks`, data,{
+    const response = await api.post(`${API_URL}/${capsuleId}/tasks`, data,{
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -81,7 +81,7 @@ export const createTask = async (capsuleId: number, data: CreateTaskData) => {
 };
 
   export const updateTask = async (capsuleId: number, taskId: number, data: UpdateTaskData) => {
-    const response = await axios.put(`${API_URL}/${capsuleId}/tasks/${taskId}`, data,{
+    const response = await api.put(`${API_URL}/${capsuleId}/tasks/${taskId}`, data,{
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -90,7 +90,7 @@ export const createTask = async (capsuleId: number, data: CreateTaskData) => {
 };
 
 export const deleteTask = async (capsuleId: number, taskId: number) => {
-    const response = await axios.delete(`${API_URL}/${capsuleId}/tasks/${taskId}`,{
+    const response = await api.delete(`${API_URL}/${capsuleId}/tasks/${taskId}`,{
       headers: {
         Authorization: `Bearer ${token}`,
       },

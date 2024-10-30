@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 import dayjs from 'dayjs';
 import { Task } from '../components/types';
 
@@ -8,7 +8,7 @@ const API_URL = 'http://localhost:3000/tasks';
 const token = localStorage.getItem('token');
 
 export const fetchUsers = async () => {
-  const response = await axios.get(`${API_URL}/users`, {
+  const response = await api.get(`${API_URL}/users`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -18,7 +18,7 @@ export const fetchUsers = async () => {
 
 // Fetch tasks by capsule ID
 export const fetchTasksByCapsule = async (capsuleId: number) => {
-  const response = await axios.get(`${API_URL}/capsule/${capsuleId}`, {
+  const response = await api.get(`${API_URL}/capsule/${capsuleId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -28,7 +28,7 @@ export const fetchTasksByCapsule = async (capsuleId: number) => {
 
 // Create a new task or subtask (with blockers)
 export const createTask = async (capsuleId: number, taskData: any) => {
-  const response = await axios.post(API_URL, { capsuleId, ...taskData }, {
+  const response = await api.post(API_URL, { capsuleId, ...taskData }, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -38,7 +38,7 @@ export const createTask = async (capsuleId: number, taskData: any) => {
 
 // Update an existing task or subtask (with blockers)
 export const updateTask = async (capsuleId: number, taskId: number, taskData: any) => {
-  const response = await axios.put(`${API_URL}/${taskId}`, { capsuleId, ...taskData }, {
+  const response = await api.put(`${API_URL}/${taskId}`, { capsuleId, ...taskData }, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -48,7 +48,7 @@ export const updateTask = async (capsuleId: number, taskId: number, taskData: an
 
 // Delete a task or subtask
 export const deleteTask = async (capsuleId: number, taskId: number) => {
-  const response = await axios.delete(`${API_URL}/${taskId}`, {
+  const response = await api.delete(`${API_URL}/${taskId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -58,7 +58,7 @@ export const deleteTask = async (capsuleId: number, taskId: number) => {
 
 // Fetch subtasks by parent task ID
 export const fetchSubtasks = async (parentId: number) => {
-  const response = await axios.get(`${API_URL}?parentId=${parentId}`, {
+  const response = await api.get(`${API_URL}?parentId=${parentId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -68,7 +68,7 @@ export const fetchSubtasks = async (parentId: number) => {
 
 // Create a new subtask (with blockers)
 export const createSubtask = async (parent_id: number, capsuleId: number, subtask: Task) => {
-  const response = await axios.post(API_URL, { capsuleId, parent_id, ...subtask}, {
+  const response = await api.post(API_URL, { capsuleId, parent_id, ...subtask}, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -78,7 +78,7 @@ export const createSubtask = async (parent_id: number, capsuleId: number, subtas
 
 // Update an existing subtask (with blockers)
 export const updateSubtask = async (subtaskId: number, taskData: any) => {
-  const response = await axios.put(`${API_URL}/${subtaskId}`, taskData, {
+  const response = await api.put(`${API_URL}/${subtaskId}`, taskData, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -88,7 +88,7 @@ export const updateSubtask = async (subtaskId: number, taskData: any) => {
 
 // Delete a subtask
 export const deleteSubtask = async (subtaskId: number) => {
-  const response = await axios.delete(`${API_URL}/${subtaskId}`, {
+  const response = await api.delete(`${API_URL}/${subtaskId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -99,7 +99,7 @@ export const deleteSubtask = async (subtaskId: number) => {
 // Fetch task details by task ID (include blockers)
 export const fetchTaskDetails = async (taskId: number) => {
   try {
-    const response = await axios.get(`${API_URL}/${taskId}`, {
+    const response = await api.get(`${API_URL}/${taskId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -114,7 +114,7 @@ export const fetchTaskDetails = async (taskId: number) => {
 // Fetch comments for a task
 export const fetchComments = async (taskId: number) => {
   try {
-    const response = await axios.get(`${API_URL}/${taskId}/comments`, {
+    const response = await api.get(`${API_URL}/${taskId}/comments`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -129,7 +129,7 @@ export const fetchComments = async (taskId: number) => {
 // Create a new comment (rich-text HTML content)
 export const createComment = async (taskId: number, commentText: string, author: number, parentCommentId?: number) => {
   try {
-    const response = await axios.post(`${API_URL}/${taskId}/comments`, { text: commentText, author, parentCommentId }, {
+    const response = await api.post(`${API_URL}/${taskId}/comments`, { text: commentText, author, parentCommentId }, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -144,7 +144,7 @@ export const createComment = async (taskId: number, commentText: string, author:
 // Update assigned users for a task
 export const updateAssignedUsers = async (taskId: number, assignedUserIds: number[]) => {
   try {
-    const response = await axios.put(`${API_URL}/${taskId}/assigned-users`, { assignedUserIds }, {
+    const response = await api.put(`${API_URL}/${taskId}/assigned-users`, { assignedUserIds }, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -159,7 +159,7 @@ export const updateAssignedUsers = async (taskId: number, assignedUserIds: numbe
 // Mark task as complete (handle blockers)
 export const completeTask = async (taskId: number, completed: boolean) => {
   try {
-    const response = await axios.put(`${API_URL}/${taskId}/completion`, {
+    const response = await api.put(`${API_URL}/${taskId}/completion`, {
       completed,
       completedDate: completed ? dayjs().toISOString() : null,
     }, {
@@ -176,7 +176,7 @@ export const completeTask = async (taskId: number, completed: boolean) => {
 
 // Fetch task history by task ID
 export const fetchTaskHistory = async (taskId: number) => {
-  const response = await axios.get(`${API_URL}/${taskId}/history`, {
+  const response = await api.get(`${API_URL}/${taskId}/history`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -186,7 +186,7 @@ export const fetchTaskHistory = async (taskId: number) => {
 
 // Fetch task blockers
 export const fetchTaskBlockers = async (taskId: number) => {
-  const response = await axios.get(`${API_URL}/${taskId}/blockers`, {
+  const response = await api.get(`${API_URL}/${taskId}/blockers`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -196,7 +196,7 @@ export const fetchTaskBlockers = async (taskId: number) => {
 
 // Add a blocker to a task
 export const addBlocker = async (taskId: number, blockerId: number) => {
-  const response = await axios.post(`${API_URL}/${taskId}/blockers`, { blockerId }, {
+  const response = await api.post(`${API_URL}/${taskId}/blockers`, { blockerId }, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -206,7 +206,7 @@ export const addBlocker = async (taskId: number, blockerId: number) => {
 
 // Remove a blocker from a task
 export const removeBlocker = async (taskId: number, blockerId: number) => {
-  const response = await axios.delete(`${API_URL}/${taskId}/blockers/${blockerId}`, {
+  const response = await api.delete(`${API_URL}/${taskId}/blockers/${blockerId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

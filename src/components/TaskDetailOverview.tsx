@@ -11,6 +11,7 @@ import {
   Grid,
   IconButton,
   Menu,
+  Paper,
 } from '@mui/material';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -21,6 +22,8 @@ import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CloseIcon from '@mui/icons-material/Close';
+
+const currentSettings = JSON.parse(localStorage.getItem('settings') || '{}');
 
 interface Blocker {
   id: number;
@@ -57,6 +60,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
   );
   const [assignedUsers, setAssignedUsers] = useState<User[]>(task.assignedUsers);
   const [selectedTags, setSelectedTags] = useState<Tag[]>(task.tagIds || []);
+  const [timeSpent, setTimeSpent] = useState<number>(task.timeSpent || 0); // Add timeSpent field
   const [assignAnchorEl, setAssignAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
 
@@ -69,28 +73,31 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
     );
     setAssignedUsers(task.assignedUsers);
     setSelectedTags(task.tags || []);
+    setTimeSpent(task.timeSpent || 0); // Load timeSpent from task
   }, [task]);
 
   const handleSaveEdit = () => {
-    const updatedTaskWithBlockers = {
+    const updatedTaskWithTime = {
       ...updatedTask,
       blockers,
       assignedUsers,
       tags: selectedTags,
+      timeSpent, // Save the updated timeSpent
     };
-    onUpdateTask(updatedTaskWithBlockers);
+    onUpdateTask(updatedTaskWithTime);
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setUpdatedTask(task);
+    //setUpdatedTask(task);
     setBlockers(
       task.blockers.map((blocker: Task | number) =>
         typeof blocker === 'object' && 'id' in blocker ? blocker.id : blocker
       )
     );
-    setSelectedTags(task.tagIds || []);
+    setSelectedTags(task.tags || []);
+    setTimeSpent(task.timeSpent || 0); // Reset timeSpent to initial value
   };
 
   const handleAssignClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -124,7 +131,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
       <Grid container spacing={2}>
         {/* Task Header and Description */}
         <Grid item xs={12} md={8}>
-          <Box>
+          <Paper sx={{ padding: 2, marginBottom: 2 }}>
             {isEditing ? (
               <TextField
                 value={updatedTask.title}
@@ -166,7 +173,28 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
                 </Typography>
               )}
             </Box>
-          </Box>
+
+            {/* Time Spent Field */}
+            <Box mb={3}>
+              <Typography variant="h6">Time Spent (in hours)</Typography>
+              {isEditing ? (
+                <TextField
+                  type="number"
+                  value={timeSpent}
+                  onChange={(e) => setTimeSpent(Number(e.target.value))}
+                  fullWidth
+                  variant="outlined"
+                  label="Time Spent"
+                  inputProps={{ min: 0, step: 0.1 }} // Allow decimals and non-negative values
+                  sx={{ marginBottom: 2 }}
+                />
+              ) : (
+                <Typography variant="body1">
+                  {timeSpent} hours
+                </Typography>
+              )}
+            </Box>
+          </Paper>
         </Grid>
 
         {/* Status, Priority, Assigned Users, Blockers, and Tag */}
@@ -230,29 +258,31 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
             </Box>
 
             {/* Blockers */}
-            {!task.parent_id && (
+            {!task.parent_id && currentSettings.blockersEnabled &&(
               <Box>
                 <Typography variant="h6">Blockers</Typography>
                 {isEditing ? (
-                  <TextField
-                    select
-                    label="Blockers"
-                    value={blockers}
-                    onChange={(e) => setBlockers(e.target.value as unknown as number[])}
-                    SelectProps={{
-                      multiple: true,
-                    }}
-                    variant="outlined"
-                    sx={{ width: '200px' }}
-                  >
-                    {blockersDependency
-                      .filter((blocker) => blocker.id !== task.id) // Filter out current task from blockers
-                      .map((blocker) => (
-                        <MenuItem key={blocker.id} value={blocker.id}>
-                          {blocker.title}
-                        </MenuItem>
-                      ))}
-                  </TextField>
+                  <Box display="flex" flexWrap="wrap" gap={1} justifyContent="flex-end">
+                    <TextField
+                      select
+                      label="Blockers"
+                      value={blockers}
+                      onChange={(e) => setBlockers(e.target.value as unknown as number[])}
+                      SelectProps={{
+                        multiple: true,
+                      }}
+                      variant="outlined"
+                      sx={{ width: '200px' }}
+                    >
+                      {blockersDependency
+                        .filter((blocker) => blocker.id !== task.id) // Filter out current task from blockers
+                        .map((blocker) => (
+                          <MenuItem key={blocker.id} value={blocker.id}>
+                            {blocker.title}
+                          </MenuItem>
+                        ))}
+                    </TextField>
+                  </Box>
                 ) : (
                   <Box>
                     {blockers.length > 0 ? (
@@ -283,29 +313,31 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
             {/* Tag Selector */}
             {isEditing && (
               <Box>
-                <Typography variant="h6">Tag</Typography>
-                <TextField
-                  select
-                  label="Select Tag"
-                  value={selectedTags.map((tag) => tag.id)}
-                  onChange={handleTagChange}
-                  variant="outlined"
-                  SelectProps={{ multiple: true }}
-                  sx={{ width: '200px' }}
-                >
-                  {tags.map((tag) => (
-                    <MenuItem key={tag.id} value={tag.id}>
-                      {tag.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <Typography variant="h6">Tags</Typography>
+                <Box display="flex" flexWrap="wrap" gap={1} justifyContent="flex-end">
+                  <TextField
+                    select
+                    label="Select Tag"
+                    value={selectedTags.map((tag) => tag.id)}
+                    onChange={handleTagChange}
+                    variant="outlined"
+                    SelectProps={{ multiple: true }}
+                    sx={{ width: '200px' }}
+                  >
+                    {tags.map((tag) => (
+                      <MenuItem key={tag.id} value={tag.id}>
+                        {tag.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Box>
               </Box>
             )}
             {!isEditing && (
               <Box>
                 <Typography variant="h6">Tags</Typography>
                 {selectedTags.length > 0 ? (
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap">
                     {selectedTags.map((tag) => (
                       <Chip key={tag.id} label={tag.name} size="small" />
                     ))}

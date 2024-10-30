@@ -2,6 +2,7 @@ export interface User {
     avatar: string | undefined;
     id: string;
     name: string;
+    role?: Role;  
   }
   
   export interface Task {
@@ -20,6 +21,7 @@ export interface User {
     blockers: number[];
     tagIds?: Tag[];
     tags?: Tag[];
+    timeSpent?: number;
   }
   
  export  interface Comment {
@@ -47,4 +49,17 @@ export interface User {
 export interface Tag {
     id: string;
     name: string;
+  }
+
+  export interface Permission {
+    id: string;
+    name: string;               // Name of the permission, e.g., "Read Task"
+    entity: string;             // Entity this permission applies to, e.g., "Task", "Capsule"
+    action: string;             // Action this permission allows, e.g., "read", "write", "edit", "delete"
+  }
+  
+  export interface Role {
+    id: string;
+    name: string;               // Name of the role, e.g., "Admin", "Manager"
+    permissions: Permission[];  // List of permissions assigned to this role
   }

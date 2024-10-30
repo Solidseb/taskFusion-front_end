@@ -247,6 +247,10 @@ const TaskDetail: React.FC = () => {
     setActiveTab(newValue);
   };
 
+  const getTabIndex = (index: number) => {
+    return !task?.parent_id && currentSettings.subtasksEnabled ? index : index - 1;
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -271,14 +275,14 @@ const TaskDetail: React.FC = () => {
 
           {/* Tabs for File Attachments, Comments, and History always visible */}
           <Tabs value={activeTab} onChange={handleTabChange}>
-            {!task.parent_id && currentSettings.subtasksEnabled && <Tab label="Subtasks" />}
+          {!task.parent_id && currentSettings.subtasksEnabled && <Tab label="Subtasks" />}
             <Tab label="File Attachments" />
             <Tab label="Comments" />
             <Tab label="History" />
           </Tabs>
 
           {/* Subtasks Tab - Only visible when task is not a subtask */}
-          {activeTab === 0 && !task.parent_id && currentSettings.subtasksEnabled && (
+          {!task.parent_id && currentSettings.subtasksEnabled && activeTab === 0 && (
             <SubtaskTab
               taskId={task.id}
               subtasks={subtasks}
@@ -293,10 +297,9 @@ const TaskDetail: React.FC = () => {
           )}
 
           {/* File Attachments Tab */}
-          {activeTab === (task.parent_id ? 0 : 1) && <FileAttachmentTab taskId={task.id} />}
-
-          {/* Comments Tab */}
-          {activeTab === (task.parent_id ? 1 : 2) && (
+          {activeTab === getTabIndex(1) && <FileAttachmentTab taskId={task.id} />}
+           {/* Comment Tab */}
+          {activeTab === getTabIndex(2) && (
             <CommentTab
               users={users}
               comments={comments}
@@ -309,7 +312,7 @@ const TaskDetail: React.FC = () => {
           )}
 
           {/* Task History Tab */}
-          {activeTab === (task.parent_id ? 2 : 3) && <TaskHistoryTab history={taskHistory} users={users} tasks={tasks} />}
+          {activeTab === getTabIndex(3) && <TaskHistoryTab history={taskHistory} users={users} tasks={tasks} tags={tags}/>}
 
           <Divider sx={{ my: 4 }} />
         </>

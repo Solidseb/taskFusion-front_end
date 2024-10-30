@@ -12,7 +12,9 @@ import {
   Typography,
   LinearProgress,
   Tooltip, 
-  Avatar
+  Avatar,
+  Stack,
+  Chip
 } from '@mui/material';
 import { Link } from 'react-router-dom';  // Import Link for navigation
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -77,12 +79,13 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
           <TableHead>
             <TableRow>
               <TableCell>Subtask Name</TableCell>
-              <TableCell>Assigned Users</TableCell> {/* New column for assigned users */}
+              <TableCell>Assigned Users</TableCell>
               <TableCell>Start Date</TableCell>
               <TableCell>Due Date</TableCell>
               <TableCell>Completed Date</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Priority</TableCell>
+              <TableCell>Tags</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -139,8 +142,38 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                       : 'Not completed'}
                   </TableCell>
 
-                  <TableCell>{subtask.status}</TableCell>
-                  <TableCell>{subtask.priority}</TableCell>
+                  {/* Status */}
+                  <TableCell><Chip
+                      label={subtask.status}
+                      color={subtask.status === 'Completed' ? 'success' : subtask.status === 'In Progress' ? 'primary' : 'default'}
+                  /></TableCell>
+
+                  {/* Priority */}
+                  <TableCell>      
+                    <Chip
+                      label={subtask.priority}
+                      sx={{
+                        backgroundColor: 
+                        subtask.priority === 'Critical'
+                            ? 'red'
+                            : subtask.priority === 'High'
+                            ? 'orange'
+                            : subtask.priority === 'Medium'
+                            ? '#F5E050'
+                            : 'green',
+                        color: 'white'
+                      }}
+                    />
+                  </TableCell>
+
+                  {/* Display Tags */}
+                  <TableCell>
+                    <Stack direction="row" spacing={1}>
+                      {subtask.tags?.map((tag) => (
+                        <Chip key={tag.id} label={tag.name} size="small" />
+                      ))}
+                    </Stack>
+                  </TableCell>
 
                   <TableCell>
                     <Checkbox

@@ -17,6 +17,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({ filters, onFilterChange }) =>
         <InputLabel>Priority</InputLabel>
         <Select value={filters.priority} onChange={(e) => handleFilterChange('priority', e.target.value)} label="Priority">
           <MenuItem value="">All</MenuItem>
+          <MenuItem value="Critical">Critical</MenuItem>
           <MenuItem value="High">High</MenuItem>
           <MenuItem value="Medium">Medium</MenuItem>
           <MenuItem value="Low">Low</MenuItem>

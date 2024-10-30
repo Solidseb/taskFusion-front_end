@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Chip, Menu, MenuItem } from '@mui/material';
 import { Task } from '../components/types';
 
-const priorityOptions = ['Low', 'Medium', 'High'];
+const priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
 
 interface TaskPrioritySelectorProps {
   task: Task;
@@ -29,8 +29,18 @@ const TaskPrioritySelector: React.FC<TaskPrioritySelectorProps> = ({ task, onUpd
     <>
       <Chip
         label={task.priority}
-        color={task.priority === 'High' ? 'error' : task.priority === 'Medium' ? 'warning' : 'success'}
         onClick={handlePriorityClick}
+        sx={{
+          backgroundColor: 
+            task.priority === 'Critical'
+              ? 'red'
+              : task.priority === 'High'
+              ? 'orange'
+              : task.priority === 'Medium'
+              ? '#F5E050'
+              : 'green',
+          color: 'white'
+        }}
       />
       <Menu anchorEl={priorityAnchorEl} open={Boolean(priorityAnchorEl)} onClose={() => handlePriorityClose()}>
         {priorityOptions.map((priority) => (

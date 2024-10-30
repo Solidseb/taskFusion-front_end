@@ -27,7 +27,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
             <TableCell>Completed Date</TableCell>
             <TableCell>Status</TableCell>
             <TableCell>Priority</TableCell>
-            <TableCell>Tags</TableCell> {/* New column for tags */}
+            <TableCell>Tags</TableCell>
             <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
@@ -81,10 +81,28 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                 <TableCell>{task.completedDate ? dayjs(task.completedDate).format('MMMM D, YYYY') : 'Not completed'}</TableCell>
 
                 {/* Status */}
-                <TableCell>{task.status}</TableCell>
+                <TableCell><Chip
+                  label={task.status}
+                  color={task.status === 'Completed' ? 'success' : task.status === 'In Progress' ? 'primary' : 'default'}
+                /></TableCell>
 
                 {/* Priority */}
-                <TableCell>{task.priority}</TableCell>
+                <TableCell>      
+                  <Chip
+                    label={task.priority}
+                    sx={{
+                      backgroundColor: 
+                        task.priority === 'Critical'
+                          ? 'red'
+                          : task.priority === 'High'
+                          ? 'orange'
+                          : task.priority === 'Medium'
+                          ? '#F5E050'
+                          : 'green',
+                      color: 'white'
+                    }}
+                  />
+                </TableCell>
 
                 {/* Display Tags */}
                 <TableCell>

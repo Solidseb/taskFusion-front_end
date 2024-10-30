@@ -8,7 +8,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Typography,
 } from '@mui/material';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { Tag } from '../components/types'; // Import Tag type
 
 interface TaskModalProps {
@@ -16,7 +19,7 @@ interface TaskModalProps {
   onClose: () => void;
   onSave: (taskData: any) => void;
   users: { id: string; name: string }[];
-  tags: Tag[]; // Add tags prop
+  tags: Tag[];
   initialTaskData?: any;
 }
 
@@ -35,7 +38,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [status, setStatus] = useState('To Do');
   const [priority, setPriority] = useState('Medium');
   const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]); // Track selected tag IDs as string[].
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (initialTaskData) {
@@ -55,7 +58,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
       const tagIds = initialTaskData.tags
         ? initialTaskData.tags.map((tag: any) => tag.id)
         : [];
-      setSelectedTagIds(tagIds); // Store tag IDs as string[].
+      setSelectedTagIds(tagIds);
     } else {
       resetForm();
     }
@@ -69,11 +72,10 @@ const TaskModal: React.FC<TaskModalProps> = ({
     setStatus('To Do');
     setPriority('Medium');
     setAssignedUserIds([]);
-    setSelectedTagIds([]); // Reset tag IDs
+    setSelectedTagIds([]);
   };
 
   const handleSave = () => {
-    // Save full tag objects (id and name) by mapping selectedTagIds to tag objects
     const selectedTags = selectedTagIds.map((id) => {
       const tag = tags.find((tag) => tag.id === id);
       return { id: tag?.id, name: tag?.name };
@@ -87,7 +89,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
       status,
       priority,
       assignedUserIds,
-      tags: selectedTags, // Store the full tag objects (id and name)
+      tags: selectedTags,
     };
 
     onSave(taskData);
@@ -99,11 +101,17 @@ const TaskModal: React.FC<TaskModalProps> = ({
     <Modal open={open} onClose={onClose}>
       <Box
         sx={{
-          width: 400,
-          p: 3,
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
           bgcolor: 'background.paper',
-          margin: 'auto',
-          mt: '20vh',
+          width: '90%',
+          maxWidth: 500,
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          p: 3,
+          boxShadow: 24,
         }}
       >
         <TextField
@@ -114,14 +122,30 @@ const TaskModal: React.FC<TaskModalProps> = ({
           variant="outlined"
           fullWidth
         />
-        <TextField
-          label="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          margin="normal"
-          variant="outlined"
-          fullWidth
-        />
+
+        {/* Rich Text Editor for Description */}
+        <Box mt={2} mb={9}>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Description
+          </Typography>
+          <ReactQuill
+            value={description}
+            onChange={setDescription}
+            theme="snow"
+            modules={{
+              toolbar: [
+                [{ header: '1' }, { header: '2' }, { font: [] }],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['bold', 'italic', 'underline', 'strike'],
+                ['link', 'image'],
+                ['clean'],
+              ],
+            }}
+            formats={['header', 'font', 'list', 'bullet', 'bold', 'italic', 'underline', 'strike', 'link', 'image']}
+            style={{ height: '200px' }}
+          />
+        </Box>
+
         <TextField
           label="Start Date"
           type="date"
@@ -132,6 +156,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           fullWidth
           InputLabelProps={{ shrink: true }}
         />
+
         <TextField
           label="Due Date"
           type="date"
@@ -142,6 +167,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           fullWidth
           InputLabelProps={{ shrink: true }}
         />
+
         <FormControl margin="normal" fullWidth>
           <InputLabel>Status</InputLabel>
           <Select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -149,14 +175,17 @@ const TaskModal: React.FC<TaskModalProps> = ({
             <MenuItem value="In Progress">In Progress</MenuItem>
           </Select>
         </FormControl>
+
         <FormControl margin="normal" fullWidth>
           <InputLabel>Priority</InputLabel>
           <Select value={priority} onChange={(e) => setPriority(e.target.value)}>
+            <MenuItem value="Critical">Critical</MenuItem>
             <MenuItem value="High">High</MenuItem>
             <MenuItem value="Medium">Medium</MenuItem>
             <MenuItem value="Low">Low</MenuItem>
           </Select>
         </FormControl>
+
         <FormControl margin="normal" fullWidth>
           <InputLabel>Assign Users</InputLabel>
           <Select
@@ -182,12 +211,10 @@ const TaskModal: React.FC<TaskModalProps> = ({
           <InputLabel>Tags</InputLabel>
           <Select
             multiple
-            value={selectedTagIds} // Ensure this is treated as an array of tag IDs (string[]).
+            value={selectedTagIds}
             onChange={(e) => setSelectedTagIds(e.target.value as string[])}
             renderValue={(selected) =>
-              selected
-                .map((id) => tags.find((tag) => tag.id === id)?.name)
-                .join(', ')
+              selected.map((id) => tags.find((tag) => tag.id === id)?.name).join(', ')
             }
           >
             {tags.map((tag) => (
@@ -198,7 +225,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           </Select>
         </FormControl>
 
-        <Box mt={2}>
+        <Box mt={3} display="flex" justifyContent="flex-end">
           <Button
             variant="contained"
             onClick={handleSave}
