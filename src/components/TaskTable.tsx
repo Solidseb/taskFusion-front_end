@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Avatar, IconButton, Tooltip, Chip, Stack } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Avatar, IconButton, Tooltip, Chip, Stack, Typography, Box, Slider } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Task, User } from './types';
 import { Link } from 'react-router-dom';
@@ -26,6 +26,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
             <TableCell>Due Date</TableCell>
             <TableCell>Completed Date</TableCell>
             <TableCell>Status</TableCell>
+            <TableCell>Progress</TableCell>
             <TableCell>Priority</TableCell>
             <TableCell>Tags</TableCell>
             <TableCell>Actions</TableCell>
@@ -85,7 +86,21 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                   label={task.status}
                   color={task.status === 'Completed' ? 'success' : task.status === 'In Progress' ? 'primary' : 'default'}
                 /></TableCell>
-
+                 {/* Progress */}
+                <TableCell>
+                  <Typography variant="body2">{task.progress || 0}%</Typography>
+                  <Box width="100%" mt={1}>
+                    <Slider
+                      value={task.progress || 0}
+                      step={10}
+                      marks
+                      min={0}
+                      max={100}
+                      valueLabelDisplay="auto"
+                      disabled // Display only, not interactive
+                    />
+                  </Box>
+                </TableCell>
                 {/* Priority */}
                 <TableCell>      
                   <Chip

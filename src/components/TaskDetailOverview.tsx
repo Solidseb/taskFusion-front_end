@@ -12,6 +12,7 @@ import {
   IconButton,
   Menu,
   Paper,
+  Slider,
 } from '@mui/material';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -62,6 +63,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
   const [selectedTags, setSelectedTags] = useState<Tag[]>(task.tagIds || []);
   const [timeSpent, setTimeSpent] = useState<number>(task.timeSpent || 0); // Add timeSpent field
   const [assignAnchorEl, setAssignAnchorEl] = useState<null | HTMLElement>(null);
+  const [progress, setProgress] = useState<number>(task.progress || 0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -73,7 +75,8 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
     );
     setAssignedUsers(task.assignedUsers);
     setSelectedTags(task.tags || []);
-    setTimeSpent(task.timeSpent || 0); // Load timeSpent from task
+    setTimeSpent(task.timeSpent || 0); 
+    setProgress(task.progress || 0);
   }, [task]);
 
   const handleSaveEdit = () => {
@@ -86,6 +89,26 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
     };
     onUpdateTask(updatedTaskWithTime);
     setIsEditing(false);
+  };
+
+  const handleProgressChange = (event: Event, newValue: number | number[]) => {
+    const updatedProgress = Array.isArray(newValue) ? newValue[0] : newValue;
+    setProgress(updatedProgress);
+  };
+
+  const handleSaveProgress = () => {
+    const updatedTask = { ...task, progress };
+    if (progress === 100) {
+      updatedTask.status = 'Completed';
+    } else if (progress === 0) {
+      updatedTask.status = 'To Do';
+    } else {
+      updatedTask.status = 'In Progress';
+    }
+    if (task.progress !== progress) {
+       onUpdateTask(updatedTask);
+    }
+   
   };
 
   const handleCancelEdit = () => {
@@ -172,6 +195,24 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
                   <div dangerouslySetInnerHTML={{ __html: task.description }} />
                 </Typography>
               )}
+            </Box>
+            {/* Progress Section */}
+            <Box mb={3}>
+              <Typography variant="h6">Progress</Typography>
+              <Slider
+                value={progress}
+                onChange={handleProgressChange}
+                onChangeCommitted={handleSaveProgress} // Save progress on slider release
+                step={5}
+                marks
+                min={0}
+                max={100}
+                valueLabelDisplay="auto"
+                aria-labelledby="progress-slider"
+              />
+              <Typography variant="body2" color="textSecondary">
+                {progress}% Complete
+              </Typography>
             </Box>
 
             {/* Time Spent Field */}

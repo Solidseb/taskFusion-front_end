@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchCapsuleDetails } from '../services/capsuleService';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress, Slider } from '@mui/material';
 import TaskManager from './TaskManager';
-import { Tag, User } from './types';
+import { Tag, Task, User } from './types';
 import { toast } from 'react-toastify';
 import { fetchUsers } from '../services/userService';
 import { useCapsule } from '../context/CapsuleContext'; // Import the useCapsule hook
@@ -18,7 +18,9 @@ const CapsuleDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-
+  const [projectProgress, setProjectProgress] = useState(0);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -38,7 +40,8 @@ const CapsuleDetail: React.FC = () => {
         if (capsuleIdParam) {
           const capsuleDetails = await fetchCapsuleDetails(parseInt(capsuleIdParam));
           setCapsule(capsuleDetails);
-          setCapsuleId(parseInt(capsuleIdParam)); // Set capsuleId in context
+          setTasks(capsuleDetails.tasks);
+          setCapsuleId(parseInt(capsuleIdParam)); 
         }
       } catch (err) {
         toast.error('Failed to load capsule details.');
@@ -63,6 +66,13 @@ const CapsuleDetail: React.FC = () => {
     fetchTags();
   }, [organizationId]);
 
+  useEffect(() => {
+    const totalProgress = tasks.reduce((sum, task) => sum + (task.progress || 0), 0);
+    const progressPercentage = tasks.length ? totalProgress / tasks.length : 0;
+    setProjectProgress(progressPercentage);
+
+  }, [tasks]);
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -72,7 +82,9 @@ const CapsuleDetail: React.FC = () => {
       {/* Capsule Title and Description */}
       <Typography variant="h4">{capsule?.title}</Typography>
       <Typography variant="body1" gutterBottom>{capsule?.description}</Typography>
-
+      <Typography variant="h5">Overall Progress</Typography>
+      <Slider value={projectProgress} max={100} disabled />
+      <Typography>{projectProgress.toFixed(2)}% Complete</Typography>
       {/* Task Manager */}
       <Box my={2}>
         <TaskManager users={users} tags={tags} /> {/* No need to pass capsuleId as it's in context */}

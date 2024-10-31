@@ -22,6 +22,7 @@ export interface User {
     tagIds?: Tag[];
     tags?: Tag[];
     timeSpent?: number;
+    progress?: number;
   }
   
  export  interface Comment {

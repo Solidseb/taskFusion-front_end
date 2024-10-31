@@ -14,7 +14,8 @@ import {
   Tooltip, 
   Avatar,
   Stack,
-  Chip
+  Chip,
+  Slider
 } from '@mui/material';
 import { Link } from 'react-router-dom';  // Import Link for navigation
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -84,6 +85,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
               <TableCell>Due Date</TableCell>
               <TableCell>Completed Date</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Progress</TableCell>
               <TableCell>Priority</TableCell>
               <TableCell>Tags</TableCell>
               <TableCell>Actions</TableCell>
@@ -147,7 +149,21 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                       label={subtask.status}
                       color={subtask.status === 'Completed' ? 'success' : subtask.status === 'In Progress' ? 'primary' : 'default'}
                   /></TableCell>
-
+                  {/* Progress */}
+                  <TableCell>
+                  <Typography variant="body2">{subtask.progress || 0}%</Typography>
+                  <Box width="100%" mt={1}>
+                    <Slider
+                      value={subtask.progress || 0}
+                      step={10}
+                      marks
+                      min={0}
+                      max={100}
+                      valueLabelDisplay="auto"
+                      disabled // Display only, not interactive
+                    />
+                  </Box>
+                </TableCell>
                   {/* Priority */}
                   <TableCell>      
                     <Chip
