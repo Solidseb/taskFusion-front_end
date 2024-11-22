@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, IconButton, CircularProgress, Avatar, Bo
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format, isValid } from 'date-fns';
-import { User } from "./types";
+import { User } from "../types/types";
 
 interface CapsuleCardProps {
   title: string;
@@ -41,12 +41,12 @@ const CapsuleCard: React.FC<CapsuleCardProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Completed':
+      case 'COMPLETED':
         return 'green';
-      case 'In Progress':
+      case 'IN_PROGRESS':
         return 'orange';
-      case 'Pending':
-        return 'blue';
+      case 'PENDING_DEPENDENCIES':
+        return 'red';
       default:
         return 'gray';
     }

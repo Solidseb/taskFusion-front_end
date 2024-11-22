@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { fetchCapsuleDetails } from '../services/capsuleService';
 import { Box, Typography, CircularProgress, Slider } from '@mui/material';
 import TaskManager from './TaskManager';
-import { Tag, Task, User } from './types';
+import { Tag, Task, User } from '../types/types';
 import { toast } from 'react-toastify';
 import { fetchUsers } from '../services/userService';
 import { useCapsule } from '../context/CapsuleContext'; // Import the useCapsule hook

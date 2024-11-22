@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import TaskList from "./TaskList";
 import TaskModal from "./TaskModal";
 import { fetchTasksByCapsule, createTask, updateTask, deleteTask, completeTask } from "../services/taskService";
-import { Tag, Task, User } from "./types";
+import { Tag, Task, User } from "../types/types";
 import { toast } from "react-toastify";
 import { useCapsule } from '../context/CapsuleContext'; // Use CapsuleContext
 
@@ -92,7 +92,7 @@ const TaskManager: React.FC<{ users: User[], tags: Tag[] }> = ({ users, tags }) 
         throw new Error('Task not found');
       }
       // Check if all subtasks are completed before allowing the task to be marked as completed
-      if (completed && (task.subtasks?.some(subtask => subtask.status !== 'Completed') ?? false)) {
+      if (completed && (task.subtasks?.some(subtask => subtask.status !== 'COMPLETED') ?? false)) {
         toast.error("Cannot complete task because not all subtasks are completed.");
         return;
       }

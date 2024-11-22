@@ -14,7 +14,7 @@ import {
   Box,
   Grid,
 } from '@mui/material';
-import { Role, Permission } from './types';
+import { Role, Permission } from '../types/types';
 import * as SettingsService from '../services/settings.service';
 import { toast } from 'react-toastify';
 

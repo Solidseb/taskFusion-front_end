@@ -20,7 +20,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { Tag, Role, Permission, User } from '../components/types';
+import { Tag, Role, Permission, User } from '../types/types';
 import * as SettingsService from '../services/settings.service';
 import RoleManagementModal from '../components/RoleManagementModal';
 import UserCreationForm from '../components/UserCreationForm';

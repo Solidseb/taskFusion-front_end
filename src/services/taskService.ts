@@ -1,6 +1,6 @@
 import api from './api';
 import dayjs from 'dayjs';
-import { Task } from '../components/types';
+import { Task } from '../types/types';
 
 const API_URL = 'http://localhost:3000/tasks';
 
@@ -212,4 +212,16 @@ export const removeBlocker = async (taskId: number, blockerId: number) => {
     },
   });
   return response.data;
+};
+
+export const updateTaskStatus = async (taskId: number, status: string) => {
+  return await api.put(
+    `${API_URL}/tasks/${taskId}`,
+    { status },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 };

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography, Avatar, Button, Menu, MenuItem, IconButton, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import { Task, User } from '../components/types';
+import { Task, User } from '../types/types';
 
 interface AssignedUsersProps {
   task: Task;

@@ -22,7 +22,7 @@ import SubtaskTab from './SubtaskTab';
 import CommentTab from './CommentTab';
 import FileAttachmentTab from './FileAttachmentTab';
 import TaskHistoryTab from './TaskHistoryTab'; 
-import { User, Task, Comment, TaskHistory, Tag } from './types';
+import { User, Task, Comment, TaskHistory, Tag } from '../types/types';
 import { useCapsule } from '../context/CapsuleContext';
 import axios from 'axios';
 

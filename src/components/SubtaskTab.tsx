@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@mui/material';
 import SubtaskList from './SubtaskList';
 import TaskModal from './TaskModal';
-import { Tag, Task, User } from './types';
+import { Tag, Task, User } from '../types/types';
 
 interface SubtaskTabProps {
   taskId: number;

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Comment, User } from './types';
+import { Comment, User } from '../types/types';
 
 interface CommentTabProps {
   users: User[];

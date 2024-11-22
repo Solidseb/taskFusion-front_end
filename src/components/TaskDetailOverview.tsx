@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Task, User, Tag } from '../components/types';
+import { Task, User, Tag } from '../types/types';
 import TaskStatusSelector from './TaskStatusSelector';
 import TaskPrioritySelector from './TaskPrioritySelector';
 import dayjs from 'dayjs';
@@ -61,21 +61,14 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
   );
   const [assignedUsers, setAssignedUsers] = useState<User[]>(task.assignedUsers);
   const [selectedTags, setSelectedTags] = useState<Tag[]>(task.tagIds || []);
-  const [timeSpent, setTimeSpent] = useState<number>(task.timeSpent || 0); // Add timeSpent field
+  const [timeSpent, setTimeSpent] = useState<number>(task.timeSpent || 0);
   const [assignAnchorEl, setAssignAnchorEl] = useState<null | HTMLElement>(null);
   const [progress, setProgress] = useState<number>(task.progress || 0);
   const navigate = useNavigate();
 
+  // Debugging to check if `task.progress` is changing
   useEffect(() => {
-    setUpdatedTask(task);
-    setBlockers(
-      task.blockers.map((blocker: Task | number) =>
-        typeof blocker === 'object' && 'id' in blocker ? blocker.id : blocker
-      )
-    );
-    setAssignedUsers(task.assignedUsers);
-    setSelectedTags(task.tags || []);
-    setTimeSpent(task.timeSpent || 0); 
+    console.log("Task prop updated:", task);
     setProgress(task.progress || 0);
   }, [task]);
 
@@ -85,7 +78,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
       blockers,
       assignedUsers,
       tags: selectedTags,
-      timeSpent, // Save the updated timeSpent
+      timeSpent,
     };
     onUpdateTask(updatedTaskWithTime);
     setIsEditing(false);
@@ -98,29 +91,28 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
 
   const handleSaveProgress = () => {
     const updatedTask = { ...task, progress };
+
+    // Automatically update status based on progress
     if (progress === 100) {
-      updatedTask.status = 'Completed';
+      updatedTask.status = 'COMPLETED';
     } else if (progress === 0) {
-      updatedTask.status = 'To Do';
+      updatedTask.status = 'To_DO';
     } else {
-      updatedTask.status = 'In Progress';
+      updatedTask.status = 'IN_PROGRESS';
     }
-    if (task.progress !== progress) {
-       onUpdateTask(updatedTask);
-    }
-   
+    
+    onUpdateTask(updatedTask);
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    //setUpdatedTask(task);
     setBlockers(
       task.blockers.map((blocker: Task | number) =>
         typeof blocker === 'object' && 'id' in blocker ? blocker.id : blocker
       )
     );
     setSelectedTags(task.tags || []);
-    setTimeSpent(task.timeSpent || 0); // Reset timeSpent to initial value
+    setTimeSpent(task.timeSpent || 0);
   };
 
   const handleAssignClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -196,13 +188,14 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
                 </Typography>
               )}
             </Box>
+
             {/* Progress Section */}
             <Box mb={3}>
               <Typography variant="h6">Progress</Typography>
               <Slider
                 value={progress}
                 onChange={handleProgressChange}
-                onChangeCommitted={handleSaveProgress} // Save progress on slider release
+                onChangeCommitted={handleSaveProgress}
                 step={5}
                 marks
                 min={0}
@@ -226,7 +219,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
                   fullWidth
                   variant="outlined"
                   label="Time Spent"
-                  inputProps={{ min: 0, step: 0.1 }} // Allow decimals and non-negative values
+                  inputProps={{ min: 0, step: 0.1 }}
                   sx={{ marginBottom: 2 }}
                 />
               ) : (
@@ -299,7 +292,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
             </Box>
 
             {/* Blockers */}
-            {!task.parent_id && currentSettings.blockersEnabled &&(
+            {!task.parent_id && currentSettings.blockersEnabled && (
               <Box>
                 <Typography variant="h6">Blockers</Typography>
                 {isEditing ? (
@@ -329,7 +322,7 @@ const TaskDetailOverview: React.FC<TaskDetailProps> = ({
                     {blockers.length > 0 ? (
                       <Stack spacing={1} direction="row" justifyContent="flex-end">
                         {blockers
-                          .filter((blockerId) => blockerId !== task.id) // Filter out current task from blockers
+                          .filter((blockerId) => blockerId !== task.id)
                           .map((blockerId) => {
                             const blocker = blockersDependency.find((b) => b.id === blockerId);
                             return blocker ? (

@@ -1,6 +1,6 @@
 // src/services/settings.service.ts
 import axios from 'axios';
-import { Tag, Role, Permission, User } from '../components/types';
+import { Tag, Role, Permission, User } from '../types/types';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 

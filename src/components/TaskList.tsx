@@ -3,7 +3,7 @@ import { Box, Button, ToggleButton, ToggleButtonGroup, LinearProgress, Typograph
 import { ViewList, CalendarToday } from '@mui/icons-material';
 import TaskTable from './TaskTable';
 import TaskFilters from './TaskFilters';
-import { Task, User } from './types';
+import { Task, User } from '../types/types';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -59,7 +59,7 @@ const TaskList: React.FC<TaskListProps> = ({
   }, [tasks, filters, applyFilters]);
 
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((task) => task.status === 'Completed').length;
+  const completedTasks = tasks.filter((task) => task.status === 'COMPLETED').length;
   const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   const events = tasks

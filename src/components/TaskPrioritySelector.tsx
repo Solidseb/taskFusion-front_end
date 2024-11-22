@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Chip, Menu, MenuItem } from '@mui/material';
-import { Task } from '../components/types';
+import { Task } from '../types/types';
 
 const priorityOptions = ['Low', 'Medium', 'High', 'Critical'];
 

@@ -10,7 +10,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import FlagIcon from '@mui/icons-material/Flag';
-import { TaskHistory, User, Task, Tag} from './types'; // Assuming Task type includes id and title
+import { TaskHistory, User, Task, Tag} from '../types/types'; // Assuming Task type includes id and title
 
 interface TaskHistoryTabProps {
   history: TaskHistory[];

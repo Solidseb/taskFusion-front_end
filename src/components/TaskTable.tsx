@@ -1,9 +1,28 @@
+// src/components/TaskTable.tsx
+
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Checkbox, Avatar, IconButton, Tooltip, Chip, Stack, Typography, Box, Slider } from '@mui/material';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Checkbox,
+  Avatar,
+  IconButton,
+  Tooltip,
+  Chip,
+  Stack,
+  Typography,
+  Box,
+  Slider,
+} from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { Task, User } from './types';
+import { Task, User } from '../types/types';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
+import { TASK_STATUSES, TaskStatus } from '../types/taskStatuses';
 
 interface TaskTableProps {
   tasks: Task[];
@@ -36,7 +55,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
           {tasks.length > 0 ? (
             tasks.map((task) => (
               <TableRow key={task.id}>
-                <TableCell style={{ textDecoration: task.status === 'Completed' ? 'line-through' : 'none' }}>
+                <TableCell style={{ textDecoration: task.status === 'COMPLETED' ? 'line-through' : 'none' }}>
                   <Link to={`/tasks/${task.id}`} className="task-link">
                     {task.title}
                   </Link>
@@ -69,7 +88,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                     <>
                       {new Date(new Date(task.dueDate).setDate(new Date(task.dueDate).getDate() + 1)).toLocaleDateString()}
                       {new Date() > new Date(new Date(task.dueDate).setDate(new Date(task.dueDate).getDate() + 1)) &&
-                        task.status !== 'Completed' && (
+                        task.status !== 'COMPLETED' && (
                           <span style={{ color: 'red' }}> (Overdue)</span>
                       )}
                     </>
@@ -82,11 +101,17 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                 <TableCell>{task.completedDate ? dayjs(task.completedDate).format('MMMM D, YYYY') : 'Not completed'}</TableCell>
 
                 {/* Status */}
-                <TableCell><Chip
-                  label={task.status}
-                  color={task.status === 'Completed' ? 'success' : task.status === 'In Progress' ? 'primary' : 'default'}
-                /></TableCell>
-                 {/* Progress */}
+                <TableCell>
+                  <Chip
+                    label={TASK_STATUSES[task.status as TaskStatus] || task.status} // Display human-readable label
+                    color={
+                      task.status === 'COMPLETED' ? 'success' :
+                      task.status === 'IN_PROGRESS' ? 'primary' : 'default'
+                    }
+                  />
+                </TableCell>
+
+                {/* Progress */}
                 <TableCell>
                   <Typography variant="body2">{task.progress || 0}%</Typography>
                   <Box width="100%" mt={1}>
@@ -101,19 +126,16 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                     />
                   </Box>
                 </TableCell>
+
                 {/* Priority */}
-                <TableCell>      
+                <TableCell>
                   <Chip
                     label={task.priority}
                     sx={{
                       backgroundColor: 
-                        task.priority === 'Critical'
-                          ? 'red'
-                          : task.priority === 'High'
-                          ? 'orange'
-                          : task.priority === 'Medium'
-                          ? '#F5E050'
-                          : 'green',
+                        task.priority === 'Critical' ? 'red' :
+                        task.priority === 'High' ? 'orange' :
+                        task.priority === 'Medium' ? '#F5E050' : 'green',
                       color: 'white'
                     }}
                   />
@@ -131,7 +153,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, users, onDelete, onEdit, o
                 {/* Actions */}
                 <TableCell>
                   <Checkbox
-                    checked={task.status === 'Completed'}
+                    checked={task.status === 'COMPLETED'}
                     onChange={(e) => onToggleComplete(task.id, e.target.checked)}
                     color="primary"
                   />

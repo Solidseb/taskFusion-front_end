@@ -1,3 +1,5 @@
+// src/components/SubtaskList.tsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table,
@@ -11,17 +13,18 @@ import {
   Box,
   Typography,
   LinearProgress,
-  Tooltip, 
+  Tooltip,
   Avatar,
   Stack,
   Chip,
   Slider
 } from '@mui/material';
-import { Link } from 'react-router-dom';  // Import Link for navigation
+import { Link } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';  // Edit Icon for subtask editing
-import { Task } from './types';  // Ensure you import the User type
-import TaskFilters from './TaskFilters'; // Reuse filters for subtasks
+import EditIcon from '@mui/icons-material/Edit';
+import { Task } from '../types/types';
+import TaskFilters from './TaskFilters';
+import { TASK_STATUSES, TaskStatus } from '../types/taskStatuses';  // Import centralized statuses
 
 interface SubtaskListProps {
   subtasks: Task[];
@@ -58,7 +61,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
   }, [subtasks, filters, applyFilters]);
 
   const totalSubtasks = subtasks.length;
-  const completedSubtasks = subtasks.filter((subtask) => subtask.status === 'Completed').length;
+  const completedSubtasks = subtasks.filter((subtask) => subtask.status === 'COMPLETED').length;
   const progressPercentage = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
   return (
@@ -95,7 +98,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
             {filteredSubtasks.length > 0 ? (
               filteredSubtasks.map((subtask) => (
                 <TableRow key={subtask.id}>
-                  <TableCell style={{ textDecoration: subtask.status === 'Completed' ? 'line-through' : 'none' }}>
+                  <TableCell style={{ textDecoration: subtask.status === TASK_STATUSES.COMPLETED ? 'line-through' : 'none' }}>
                     {/* Link to subtask detail */}
                     <Link to={`/tasks/${subtask.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                       {subtask.title}
@@ -103,19 +106,19 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                   </TableCell>
 
                   {/* Assigned Users */}
-                      <TableCell>
-                  {subtask.assignedUsers && subtask.assignedUsers.length > 0 ? (
-                    subtask.assignedUsers.map((user) => (
-                      <Tooltip title={user.name} key={user.id}>
-                        <Avatar src={user.avatar} style={{ marginRight: 5 }}>
-                          {user.name[0].toUpperCase()}
-                        </Avatar>
-                      </Tooltip>
-                    ))
-                  ) : (
-                    'Unassigned'
-                  )}
-                </TableCell>
+                  <TableCell>
+                    {subtask.assignedUsers && subtask.assignedUsers.length > 0 ? (
+                      subtask.assignedUsers.map((user) => (
+                        <Tooltip title={user.name} key={user.id}>
+                          <Avatar src={user.avatar} style={{ marginRight: 5 }}>
+                            {user.name[0].toUpperCase()}
+                          </Avatar>
+                        </Tooltip>
+                      ))
+                    ) : (
+                      'Unassigned'
+                    )}
+                  </TableCell>
 
                   <TableCell>
                     {subtask.startDate ? new Date(subtask.startDate).toLocaleDateString() : 'No start date'}
@@ -124,11 +127,9 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                   <TableCell>
                     {subtask.dueDate ? (
                       <>
-                        {/* Add one day to the subtask due date */}
                         {new Date(new Date(subtask.dueDate).setDate(new Date(subtask.dueDate).getDate() + 1)).toLocaleDateString()}
-                        {/* Check if the (adjusted) due date is overdue */}
                         {new Date() > new Date(new Date(subtask.dueDate).setDate(new Date(subtask.dueDate).getDate() + 1)) &&
-                          subtask.status !== 'Completed' && (
+                          subtask.status !== TASK_STATUSES.COMPLETED && (
                             <span style={{ color: 'red' }}> (Overdue)</span>
                         )}
                       </>
@@ -137,7 +138,6 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                     )}
                   </TableCell>
 
-
                   <TableCell>
                     {subtask.completedDate
                       ? new Date(subtask.completedDate).toLocaleDateString()
@@ -145,32 +145,36 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
                   </TableCell>
 
                   {/* Status */}
-                  <TableCell><Chip
-                      label={subtask.status}
-                      color={subtask.status === 'Completed' ? 'success' : subtask.status === 'In Progress' ? 'primary' : 'default'}
-                  /></TableCell>
+                  <TableCell>
+                    <Chip
+                      label={TASK_STATUSES[subtask.status as TaskStatus] || subtask.status}
+                      color={subtask.status === 'COMPLETED' ? 'success' : subtask.status === 'IN_PROGRESS' ? 'primary' : 'default'}
+                    />
+                  </TableCell>
+                  
                   {/* Progress */}
                   <TableCell>
-                  <Typography variant="body2">{subtask.progress || 0}%</Typography>
-                  <Box width="100%" mt={1}>
-                    <Slider
-                      value={subtask.progress || 0}
-                      step={10}
-                      marks
-                      min={0}
-                      max={100}
-                      valueLabelDisplay="auto"
-                      disabled // Display only, not interactive
-                    />
-                  </Box>
-                </TableCell>
+                    <Typography variant="body2">{subtask.progress || 0}%</Typography>
+                    <Box width="100%" mt={1}>
+                      <Slider
+                        value={subtask.progress || 0}
+                        step={10}
+                        marks
+                        min={0}
+                        max={100}
+                        valueLabelDisplay="auto"
+                        disabled // Display only, not interactive
+                      />
+                    </Box>
+                  </TableCell>
+
                   {/* Priority */}
                   <TableCell>      
                     <Chip
                       label={subtask.priority}
                       sx={{
                         backgroundColor: 
-                        subtask.priority === 'Critical'
+                          subtask.priority === 'Critical'
                             ? 'red'
                             : subtask.priority === 'High'
                             ? 'orange'
@@ -193,14 +197,13 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
 
                   <TableCell>
                     <Checkbox
-                      checked={subtask.status === 'Completed'}
+                      checked={subtask.status === TASK_STATUSES.COMPLETED}
                       onChange={(e) => onToggleSubtaskComplete(subtask.id, e.target.checked)}
                       color="primary"
                     />
-                    {/* Edit button to open the modal for subtask editing */}
                     <IconButton
                       color="primary"
-                      onClick={() => onEditSubtask(subtask)}  // Call the new edit handler
+                      onClick={() => onEditSubtask(subtask)}
                       size="small"
                     >
                       <EditIcon />
@@ -213,7 +216,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8}>No subtasks found</TableCell>
+                <TableCell colSpan={10}>No subtasks found</TableCell>
               </TableRow>
             )}
           </TableBody>

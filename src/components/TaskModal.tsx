@@ -1,3 +1,5 @@
+// src/components/TaskModal.tsx
+
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -12,7 +14,8 @@ import {
 } from '@mui/material';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Tag } from '../components/types'; // Import Tag type
+import { Tag } from '../types/types';
+import { TASK_STATUSES, TaskStatus } from '../types/taskStatuses';
 
 interface TaskModalProps {
   open: boolean;
@@ -35,7 +38,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [status, setStatus] = useState('To Do');
+  const [status, setStatus] = useState<TaskStatus>('TO_DO'); // Default to "To Do" status key
   const [priority, setPriority] = useState('Medium');
   const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
@@ -46,10 +49,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
       setDescription(initialTaskData.description || '');
       setStartDate(initialTaskData.startDate || '');
       setDueDate(initialTaskData.dueDate || '');
-      setStatus(initialTaskData.status || 'To Do');
+      setStatus(initialTaskData.status || 'TO_DO');
       setPriority(initialTaskData.priority || 'Medium');
 
-      // Extract user IDs and tag IDs from initialTaskData
       const userIds = initialTaskData.assignedUsers
         ? initialTaskData.assignedUsers.map((user: any) => user.id)
         : [];
@@ -69,7 +71,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
     setDescription('');
     setStartDate('');
     setDueDate('');
-    setStatus('To Do');
+    setStatus('TO_DO');
     setPriority('Medium');
     setAssignedUserIds([]);
     setSelectedTagIds([]);
@@ -123,7 +125,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
           fullWidth
         />
 
-        {/* Rich Text Editor for Description */}
         <Box mt={2} mb={9}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             Description
@@ -170,9 +171,15 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
         <FormControl margin="normal" fullWidth>
           <InputLabel>Status</InputLabel>
-          <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <MenuItem value="To Do">To Do</MenuItem>
-            <MenuItem value="In Progress">In Progress</MenuItem>
+          <Select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as TaskStatus)}
+          >
+            {Object.entries(TASK_STATUSES).map(([key, label]) => (
+              <MenuItem key={key} value={key}>
+                {label}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
@@ -193,9 +200,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
             value={assignedUserIds}
             onChange={(e) => setAssignedUserIds(e.target.value as string[])}
             renderValue={(selected) =>
-              selected
-                .map((id) => users.find((user) => user.id === id)?.name)
-                .join(', ')
+              selected.map((id) => users.find((user) => user.id === id)?.name).join(', ')
             }
           >
             {users.map((user) => (
@@ -206,7 +211,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
           </Select>
         </FormControl>
 
-        {/* Tags Section */}
         <FormControl margin="normal" fullWidth>
           <InputLabel>Tags</InputLabel>
           <Select
